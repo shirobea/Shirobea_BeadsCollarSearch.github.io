@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RGB値から最も近い色を見つける</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Interフォントを適用 */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        /* スクロールバーのスタイルをカスタマイズ（オプション） */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e0e0e0;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
+    <div class="bg-white p-6 sm:p-8 md:p-10 rounded-xl shadow-2xl w-full max-w-md border border-gray-200">
+        <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6">
+            <span class="inline-block px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg shadow-md mr-2">色</span>を<span class="text-purple-600">見つける</span>
+        </h1>
+        <p class="text-gray-600 text-sm text-center mb-6">
+            赤(R), 緑(G), 青(B)の値を入力して、登録されている色の中から最も近い色を見つけます。
+        </p>
+
+        <div class="space-y-4 mb-6">
+            <div class="relative">
+                <label for="redInput" class="block text-sm font-medium text-gray-700 mb-1">赤 (R):</label>
+                <input type="number" id="redInput" min="0" max="255" value="0"
+                       class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out text-gray-800 text-lg">
+                <span class="absolute right-3 top-9 text-gray-500 text-sm">0-255</span>
+            </div>
+            <div class="relative">
+                <label for="greenInput" class="block text-sm font-medium text-gray-700 mb-1">緑 (G):</label>
+                <input type="number" id="greenInput" min="0" max="255" value="0"
+                       class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out text-gray-800 text-lg">
+                <span class="absolute right-3 top-9 text-gray-500 text-sm">0-255</span>
+            </div>
+            <div class="relative">
+                <label for="blueInput" class="block text-sm font-medium text-gray-700 mb-1">青 (B):</label>
+                <input type="number" id="blueInput" min="0" max="255" value="0"
+                       class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 transition duration-150 ease-in-out text-gray-800 text-lg">
+                <span class="absolute right-3 top-9 text-gray-500 text-sm">0-255</span>
+            </div>
+        </div>
+
+        <button id="findColorBtn"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transform transition duration-300 ease-in-out hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300 mb-6">
+            最も近い色を見つける
+        </button>
+
+        <!-- 結果表示エリア -->
+        <div id="results" class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg text-center mb-6 hidden">
+            <p class="font-medium mb-2">結果:</p>
+            <p><span class="font-bold text-lg">色名: </span><span id="colorName" class="text-xl"></span></p>
+            <p><span class="font-bold text-lg">RGB値: </span><span id="colorRgb" class="text-lg"></span></p>
+            <div id="colorPreview" class="w-24 h-24 mx-auto rounded-full mt-4 border-2 border-blue-300 shadow-md"></div>
+        </div>
+
+        <!-- エラーメッセージ表示エリア -->
+        <div id="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg hidden" role="alert">
+            <strong class="font-bold">エラー！</strong>
+            <span class="block sm:inline" id="errorText"></span>
+        </div>
+    </div>
+
+    <script>
+        // 登録済み色のリスト（Pythonコードから変換）
+        const registeredColors = [
+            {name:"#001_ホワイト",rgb:[255,255,255]},
+            {name:"#002_バター",rgb:[241,230,178]},
+            {name:"#003_イエロー",rgb:[255,215,0]},
+            {name:"#004_オレンジ",rgb:[255,130,0]},
+            {name:"#005_レッド",rgb:[239,51,64]},
+            {name:"#006_ピンク",rgb:[223,122,153]},
+            {name:"#007_パープル",rgb:[78,0,142]},
+            {name:"#008_ダークブルー",rgb:[0,35,156]},
+            {name:"#009_ブルー",rgb:[0,156,222]},
+            {name:"#010_グリーン",rgb:[0,150,94]},
+            {name:"#011_ペパーミント",rgb:[113,219,212]},
+            {name:"#012_ダークブラウン",rgb:[92,61,49]},
+            {name:"#013_グレー",rgb:[167,168,170]},
+            {name:"#014_ブラック",rgb:[0,0,0]},
+            {name:"#015_クリヤー",rgb:[,,]},
+            {name:"#016_ブラウン",rgb:[153,85,43]},
+            {name:"#017_コーヒーブラウン",rgb:[152,106,76]},
+            {name:"#018_ネールピンク",rgb:[236,195,178]},
+            {name:"#019_ライトブラウン",rgb:[198,169,146]},
+            {name:"#020_マゼンタ",rgb:[239,75,129]},
+            {name:"#021_蛍光イエロー",rgb:[,,]},
+            {name:"#022_蛍光オレンジ",rgb:[,,]},
+            {name:"#023_蛍光グリーン",rgb:[,,]},
+            {name:"#024_蛍光ピンク",rgb:[,,]},
+            {name:"#025_ヒヤシンス",rgb:[72,159,223]},
+            {name:"#026_ミントグリーン",rgb:[128,224,167]},
+            {name:"#027_ラベンダー",rgb:[191,155,222]},
+            {name:"#028_レモンイエロー",rgb:[242,240,161]},
+            {name:"#029_チーズ",rgb:[255,181,0]},
+            {name:"#030_ペールパステルブルー",rgb:[185,217,235]},
+            {name:"#031_コーラルレッド",rgb:[255,109,106]},
+            {name:"#032_ローズパープル",rgb:[191,77,165]},
+            {name:"#033_ライムグリーン",rgb:[122,204,0]},
+            {name:"#034_セルリアンブルー",rgb:[0,169,224]},
+            {name:"#035_パステルダークベージュ",rgb:[255,157,162]},
+            {name:"#036_ラピスラズリ",rgb:[131,141,200]},
+            {name:"#037_パールブルー",rgb:[,,]},
+            {name:"#038_さくらいろ",rgb:[244,166,215]},
+            {name:"#039_アップルグリーン",rgb:[121,190,112]},
+            {name:"#040_ダークローズ",rgb:[215,67,136]},
+            {name:"#041_ラズベリー",rgb:[172,20,90]},
+            {name:"#042_コバルトブルー",rgb:[8,87,195]},
+            {name:"#043_キャラメル",rgb:[244,175,35]},
+            {name:"#044_パロットグリーン",rgb:[0,133,120]},
+            {name:"#045_カラスブラック",rgb:[83,86,90]},
+            {name:"#046_マリンブルー",rgb:[137,171,227]},
+            {name:"#047_マルーンブラウン",rgb:[124,37,41]},
+            {name:"#048_キウイ",rgb:[214,232,101]},
+            {name:"#049_ベージュ",rgb:[241,202,173]},
+            {name:"#050_ローシェンナ",rgb:[220,134,51]},
+            {name:"#051_クリアーラメ",rgb:[,,]},
+            {name:"#052_クリアーレッド",rgb:[,,]},
+            {name:"#053_クリアーイエロー",rgb:[,,]},
+            {name:"#054_クリアーブルー",rgb:[,,]},
+            {name:"#055_クリアーグリーン",rgb:[,,]},
+            {name:"#056_クリアーパープル",rgb:[,,]},
+            {name:"#057_夜光グリーン",rgb:[,,]},
+            {name:"#058_夜光ブルー",rgb:[,,]},
+            {name:"#059_夜光ピンク",rgb:[,,]},
+            {name:"#060_夜光オレンジ",rgb:[,,]},
+            {name:"#061_夜光パープル",rgb:[,,]},
+            {name:"#062_パールホワイト",rgb:[,,]},
+            {name:"#063_ゴールド",rgb:[,,]},
+            {name:"#064_パールコーラル",rgb:[,,]},
+            {name:"#065_パールミント",rgb:[,,]},
+            {name:"#066_パールグリーン",rgb:[,,]},
+            {name:"#067_パールイエロー",rgb:[,,]},
+            {name:"#068_パールピンク",rgb:[,,]},
+            {name:"#069_シルバー",rgb:[,,]},
+            {name:"#070_ダークブラック",rgb:[33,39,33]},
+            {name:"#071_サファイアブルー",rgb:[0,87,183]},
+            {name:"#072_べにひいろ",rgb:[255,88,93]},
+            {name:"#073_ザクロ",rgb:[238,39,55]},
+            {name:"#074_ハナカイドウ",rgb:[252,155,179]},
+            {name:"#075_みずいろ",rgb:[164,219,232]},
+            {name:"#076_アイスミントグリーン",rgb:[185,220,210]},
+            {name:"#077_アイボリー",rgb:[248,245,227]},
+            {name:"#078_ナイルグリーン",rgb:[91,197,0]},
+            {name:"#079_ゴールデンイエロー",rgb:[241,196,0]},
+            {name:"#080_ネイビーブルー",rgb:[3,37,126]},
+            {name:"#081_ペールベージュ",rgb:[255,226,198]},
+            {name:"#082_セレストブルー",rgb:[98,181,229]},
+            {name:"#083_ダークグレー",rgb:[136,139,141]},
+            {name:"#084_ダークグリーン",rgb:[0,73,30]},
+            {name:"#085_はだいろ",rgb:[252,200,155]},
+            {name:"#086_ペールレッド",rgb:[233,205,208]},
+            {name:"#087_ペールグレー",rgb:[208,208,206]},
+            {name:"#088_ペールホワイト",rgb:[221,218,232]},
+            {name:"#089_ペールパープル",rgb:[197,180,227]},
+            {name:"#090_クロッカス",rgb:[198,161,207]},
+            {name:"#091_あおむらさきいろ",rgb:[33,21,81]},
+            {name:"#092_ダークレッド",rgb:[193,0,22]},
+            {name:"#093_カーマイン",rgb:[246,117,153]},
+            {name:"#094_バラ",rgb:[218,24,132]},
+            {name:"#095_ピーチ",rgb:[242,119,198]},
+            {name:"#096_マリーゴールド",rgb:[255,143,28]},
+            {name:"#097_ペールオレンジ",rgb:[255,174,98]},
+            {name:"#098_ジンジャーイエロー",rgb:[222,184,59]},
+            {name:"#099_オリーブ",rgb:[83,84,53]},
+            {name:"#100_ティファニーブルー",rgb:[100,204,201]},
+            {name:"#101_イエローオーカー",rgb:[180,126,0]},
+            {name:"#102_ダークベージュ",rgb:[212,173,103]},
+            {name:"#103_ライトベージュ",rgb:[247,206,215]},
+            {name:"#104_ワスレナグサ",rgb:[165,176,227]},
+            {name:"#105_しょうぶいろ",rgb:[193,167,226]},
+            {name:"#106_しこんいろ",rgb:[205,63,173]},
+            {name:"#107_パンジー",rgb:[128,39,108]},
+            {name:"#108_バイオレット",rgb:[40,0,113]},
+            {name:"#109_イエローベージュ",rgb:[253,208,134]},
+            {name:"#110_フラミンゴ",rgb:[255,160,106]},
+            {name:"#111_スターバックス",rgb:[29,105,96]},
+            {name:"#112_カーネーション",rgb:[249,159,201]},
+            {name:"#113_シアン",rgb:[0,166,200]},
+            {name:"#114_キャメルブラウン",rgb:[191,153,114]},
+            {name:"#115_ココナッツブラウン",rgb:[184,97,37]},
+            {name:"#116_ライトオレンジ",rgb:[,,]},
+            {name:"#117_ピーグリーン",rgb:[167,213,0]},
+            {name:"#118_ライトカーキ",rgb:[223,209,167]},
+            {name:"#119_アイスグリーン",rgb:[212,235,142]},
+            {name:"#120_ダークネイビーブルー",rgb:[34,50,110]},
+            {name:"#121_コンクリートグレー",rgb:[187,188,188]},
+            {name:"#122_ダークフォレストグリーン",rgb:[32,92,64]},
+            {name:"#123_マホガニー",rgb:[170,128,102]},
+            {name:"#124_ワインレッド",rgb:[162,0,103]},
+            {name:"#125_パープルロータス",rgb:[152,115,172]},
+            {name:"#126_ライトラベンダー",rgb:[200,216,235]},
+            {name:"#127_おうどいろ",rgb:[222,188,139]},
+            {name:"#128_ゼニスブルー",rgb:[159,174,229]},
+            {name:"#129_チョコレートブラウン",rgb:[98,52,18]},
+            {name:"#130_レイクブルー",rgb:[84,206,236]},
+            {name:"#131_サクラベージュ",rgb:[245,202,191]},
+            {name:"#132_オパールグリーン",rgb:[0,176,185]},
+            {name:"#133_ライトグリーン",rgb:[199,233,149]},
+            {name:"#134_メイプルレッド",rgb:[255,88,105]},
+            {name:"#135_しゅいろ",rgb:[255,106,57]},
+            {name:"#136_アイスミントブルー",rgb:[221,229,237]},
+            {name:"#137_チョコブラウン",rgb:[94,75,60]},
+            {name:"#138_コルク",rgb:[211,187,168]},
+            {name:"#139_ピンクベージュ",rgb:[225,187,180]},
+            {name:"#140_コーラル",rgb:[236,186,168]},
+            {name:"#141_オリーブグリーン",rgb:[128,140,36]},
+            {name:"#142_ベビーブルー",rgb:[177,201,232]},
+            {name:"#143_レグホーン",rgb:[214,210,196]},
+            {name:"#144_オイスターホワイト",rgb:[215,210,203]},
+            {name:"#145_スカイグレー",rgb:[177,179,179]},
+            {name:"#146_サンドホワイト",rgb:[219,200,182]},
+            {name:"#147_スプリンググリーン",rgb:[227,233,53]},
+            {name:"#148_チャイニーズレッド",rgb:[224,78,57]},
+            {name:"#149_ジェイブルー",rgb:[0,75,135]},
+            {name:"#150_ネオンイエロー",rgb:[247,234,72]},
+            {name:"#151_クリアーライトピンク",rgb:[,,]},
+            {name:"#152_クリアーブラック",rgb:[,,]},
+            {name:"#153_ライラック",rgb:[201,177,208]},
+            {name:"#154_サーモンピンク",rgb:[255,128,139]},
+            {name:"#155_グレープ",rgb:[177,78,181]},
+            {name:"#156_スカイブルー",rgb:[113,197,232]},
+            {name:"#157_クリアーグレー",rgb:[,,]},
+            {name:"#158_ロイヤルパープル",rgb:[135,24,157]},
+            {name:"#159_タントンシー",rgb:[202,188,156]},
+            {name:"#160_カフェオレブラウン",rgb:[197,139,104]},
+            {name:"#161_ダークラベンダー",rgb:[162,120,156]},
+            {name:"#162_ミルクティーブラウン",rgb:[165,136,119]},
+            {name:"#163_アッシュグレー",rgb:[117,120,123]},
+            {name:"#164_ヘーゼルブラウン",rgb:[171,152,157]},
+            {name:"#165_シナモンブラウン",rgb:[214,128,107]},
+            {name:"#166_エバーグリーン",rgb:[80,109,133]},
+            {name:"#167_サンドグレー",rgb:[197,185,172]},
+            {name:"#168_フォググレー",rgb:[190,198,196]},
+            {name:"#169_パーチメント",rgb:[166,159,136]},
+            {name:"#170_ライトキャラメル",rgb:[171,146,120]},
+            {name:"#171_サンドブラウン",rgb:[193,178,162]},
+            {name:"#172_アイビーグリーン",rgb:[146,172,160]},
+            {name:"#173_チャコールグレー",rgb:[76,54,58]},
+            {name:"#174_メロングリーン",rgb:[0,179,136]},
+            {name:"#175_アイスミントライム",rgb:[181,227,216]},
+        ];
+
+        // HTML要素への参照を取得
+        const redInput = document.getElementById('redInput');
+        const greenInput = document.getElementById('greenInput');
+        const blueInput = document.getElementById('blueInput');
+        const findColorBtn = document.getElementById('findColorBtn');
+        const resultsDiv = document.getElementById('results');
+        const colorNameSpan = document.getElementById('colorName');
+        const colorRgbSpan = document.getElementById('colorRgb');
+        const colorPreviewDiv = document.getElementById('colorPreview');
+        const errorMessageDiv = document.getElementById('errorMessage');
+        const errorTextSpan = document.getElementById('errorText');
+
+        /**
+         * 2つのRGB値間のユークリッド距離を計算します。
+         * Calculates the Euclidean distance between two RGB colors.
+         * @param {number[]} color1 - 最初のRGB色 [R, G, B]。
+         * @param {number[]} color2 - 2番目のRGB色 [R, G, B]。
+         * @returns {number} 2つの色の間の距離。
+         */
+        function calculateRgbDistance(color1, color2) {
+            const [r1, g1, b1] = color1;
+            const [r2, g2, b2] = color2;
+            return Math.sqrt(Math.pow(r2 - r1, 2) + Math.pow(g2 - g1, 2) + Math.pow(b2 - b1, 2));
+        }
+
+        /**
+         * 入力されたRGB値に最も近い色を登録済みリストから見つけます。
+         * Finds the closest color to the input RGB value from a registered list.
+         * @param {number[]} inputRgb - 検索したいRGB色 [R, G, B]。
+         * @param {object[]} colorsList - { name: string, rgb: number[] } のオブジェクトのリスト。
+         * @returns {{name: string, rgb: number[]} | null} 最も近い色名とそのRGB値、または見つからなかった場合はnull。
+         */
+        function findClosestColor(inputRgb, colorsList) {
+            if (!colorsList || colorsList.length === 0) {
+                return null;
+            }
+
+            let closestColor = null;
+            let minDistance = Infinity;
+
+            for (const color of colorsList) {
+                const distance = calculateRgbDistance(inputRgb, color.rgb);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    closestColor = color;
+                }
+            }
+            return closestColor;
+        }
+
+        /**
+         * エラーメッセージを表示します。
+         * Displays an error message.
+         * @param {string} message - 表示するエラーメッセージ。
+         */
+        function displayError(message) {
+            resultsDiv.classList.add('hidden'); // 結果を非表示
+            errorMessageDiv.classList.remove('hidden');
+            errorTextSpan.textContent = message;
+        }
+
+        /**
+         * 結果を表示します。
+         * Displays the results.
+         * @param {string} name - 見つかった色名。
+         * @param {number[]} rgb - 見つかった色のRGB値。
+         */
+        function displayResults(name, rgb) {
+            errorMessageDiv.classList.add('hidden'); // エラーを非表示
+            resultsDiv.classList.remove('hidden');
+            colorNameSpan.textContent = name;
+            colorRgbSpan.textContent = `(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+            colorPreviewDiv.style.backgroundColor = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
+        }
+
+        // ボタンクリックイベントリスナー
+        findColorBtn.addEventListener('click', () => {
+            const r = parseInt(redInput.value);
+            const g = parseInt(greenInput.value);
+            const b = parseInt(blueInput.value);
+
+            // 入力値のバリデーション
+            if (isNaN(r) || isNaN(g) || isNaN(b) || r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+                displayError("RGB値は0から255の間の整数でなければなりません。");
+                return;
+            }
+
+            const inputColor = [r, g, b];
+            const closest = findClosestColor(inputColor, registeredColors);
+
+            if (closest) {
+                displayResults(closest.name, closest.rgb);
+            } else {
+                displayError("エラー: 登録されている色がありません。");
+            }
+        });
+
+        // 初期状態で結果とエラーメッセージを非表示にする
+        window.onload = () => {
+            resultsDiv.classList.add('hidden');
+            errorMessageDiv.classList.add('hidden');
+        };
+    </script>
+</body>
+</html>
