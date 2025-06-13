@@ -28,253 +28,582 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #555;
         }
+        /* カスタムボタンのスタイル調整 */
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px; /* ボタンと入力欄の間のスペースを少し広げた */
+        }
+        .input-group input {
+            flex-grow: 1;
+            min-width: 0; /* flexアイテムとしての最小幅 */
+        }
+        .input-group .inc-dec-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 4px; /* 上下ボタン間のスペースを広げた */
+        }
+        .input-group .inc-dec-btns button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px; /* ボタンの幅を広げた */
+            height: 32px; /* ボタンの高さを広げた */
+            padding: 0; /* デフォルトのパディングを削除 */
+            font-size: 1rem; /* 矢印のサイズを小さく調整 */
+            line-height: 1; /* 行の高さを調整 */
+            border-radius: 0.5rem; /* 角丸を少し大きくした (rounded-lg) */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); /* shadow-md */
+            transition: all 0.2s ease-in-out; /* トランジションを少し長くした */
+            cursor: pointer;
+            border: 1px solid #e2e8f0; /* 薄いグレーのボーダー (border-gray-200) */
+            user-select: none; /* テキスト選択を無効化 */
+            -webkit-tap-highlight-color: transparent; /* モバイルでのタップ時のハイライトを非表示 */
+        }
+        .input-group .inc-dec-btns button:hover {
+            transform: translateY(-1px); /* 少し上に浮くような効果 */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
+        }
+        .input-group .inc-dec-btns button:active {
+            transform: translateY(1px); /* クリック時に少し沈む効果 */
+            box-shadow: none; /* クリック時はシャドウをなくす */
+        }
+        .input-group .inc-dec-btns button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4); /* focus:ring-indigo-400 */
+        }
+        /* ボタンの色味を白背景、淡い黒矢印に変更 */
+        .inc-btn, .dec-btn {
+            background-color: #ffffff; /* white */
+            color: #4b5563; /* text-gray-600 */
+        }
+        .inc-btn:hover, .dec-btn:hover {
+            background-color: #f9fafb; /* gray-50 */
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
-    <div class="bg-white p-6 sm:p-8 md:p-10 rounded-xl shadow-2xl w-full max-w-md border border-gray-200">
-        <h1 class="text-2xl sm:text-3xl font-bold text-center text-gray-800 mb-6">
-            <span class="inline-block px-3 py-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-lg shadow-md mr-2">色</span>を<span class="text-purple-600">見つける</span>
-        </h1>
-        <p class="text-gray-600 text-sm text-center mb-6">
-            赤(R), 緑(G), 青(B)の値を入力して、NicoRate 2.6mmアイロンビーズの色から最も近い色を見つけます。
-        </p>
+    <!-- メインのアプリコンテナ: 画面幅に応じて縦並び/横並びを切り替える -->
+    <div id="app-container" class="flex flex-col md:flex-row justify-center items-center w-full max-w-screen-xl mx-auto">
+        <!-- 左カラム: 入力フォームとボタン -->
+        <div class="bg-white p-8 sm:p-10 md:p-12 rounded-2xl shadow-xl w-full max-w-md md:mr-8 mb-8 md:mb-0 flex-shrink-0">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 mb-8 tracking-tight">
+                <span class="inline-block px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-700 text-white rounded-xl shadow-lg mr-2">色</span>を<span class="text-purple-700">見つける</span>
+            </h1>
+            <p class="text-gray-600 text-base text-center mb-8">
+                赤(R), 緑(G), 青(B)の値を入力して、登録されている色の中から最も近い色を見つけます。
+            </p>
 
-        <div class="space-y-4 mb-6">
-            <div class="relative">
-                <label for="redInput" class="block text-sm font-medium text-gray-700 mb-1">赤 (R):</label>
-                <input type="number" id="redInput" min="0" max="255" value="0"
-                       class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out text-gray-800 text-lg">
-                <span class="absolute right-3 top-9 text-gray-500 text-sm">0-255</span>
+            <!-- フィルタリング用のラジオボタン -->
+            <div class="mb-8 p-4 bg-gray-100 rounded-lg shadow-inner">
+                <p class="text-gray-700 font-semibold mb-3 text-center">カテゴリで絞り込む:</p>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="colorFilter" value="both" class="form-radio text-indigo-600 h-5 w-5" checked>
+                        <span class="ml-2 text-gray-700 font-medium">両方</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="colorFilter" value="NicoRate" class="form-radio text-indigo-600 h-5 w-5">
+                        <span class="ml-2 text-gray-700 font-medium">NicoRate</span>
+                    </label>
+                    <label class="inline-flex items-center">
+                        <input type="radio" name="colorFilter" value="フューズビーズ" class="form-radio text-indigo-600 h-5 w-5">
+                        <span class="ml-2 text-gray-700 font-medium">フューズビーズ</span>
+                    </label>
+                </div>
             </div>
-            <div class="relative">
-                <label for="greenInput" class="block text-sm font-medium text-gray-700 mb-1">緑 (G):</label>
-                <input type="number" id="greenInput" min="0" max="255" value="0"
-                       class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out text-gray-800 text-lg">
-                <span class="absolute right-3 top-9 text-gray-500 text-sm">0-255</span>
+
+            <div class="space-y-6 mb-8">
+                <div class="relative">
+                    <label for="redInput" class="block text-base font-semibold text-gray-700 mb-2">
+                        <span class="text-red-500">赤</span> (R):
+                    </label>
+                    <div class="input-group">
+                        <input type="text" id="redInput" min="0" max="255" placeholder="0-255"
+                               pattern="[0-9]*" inputmode="numeric"
+                               class="block w-full px-5 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-400 focus:border-indigo-400 transition duration-200 ease-in-out text-gray-800 text-lg">
+                        <div class="inc-dec-btns">
+                            <button id="redIncBtn" class="inc-btn">▲</button>
+                            <button id="redDecBtn" class="dec-btn">▼</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative">
+                    <label for="greenInput" class="block text-base font-semibold text-gray-700 mb-2">
+                        <span class="text-green-500">緑</span> (G):
+                    </label>
+                    <div class="input-group">
+                        <input type="text" id="greenInput" min="0" max="255" placeholder="0-255"
+                               pattern="[0-9]*" inputmode="numeric"
+                               class="block w-full px-5 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-400 focus:border-indigo-400 transition duration-200 ease-in-out text-gray-800 text-lg">
+                        <div class="inc-dec-btns">
+                            <button id="greenIncBtn" class="inc-btn">▲</button>
+                            <button id="greenDecBtn" class="dec-btn">▼</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="relative">
+                    <label for="blueInput" class="block text-base font-semibold text-gray-700 mb-2">
+                        <span class="text-blue-500">青</span> (B):
+                    </label>
+                    <div class="input-group">
+                        <input type="text" id="blueInput" min="0" max="255" placeholder="0-255"
+                               pattern="[0-9]*" inputmode="numeric"
+                               class="block w-full px-5 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-400 focus:border-indigo-400 transition duration-200 ease-in-out text-gray-800 text-lg">
+                        <div class="inc-dec-btns">
+                            <button id="blueIncBtn" class="inc-btn">▲</button>
+                            <button id="blueDecBtn" class="dec-btn">▼</button>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="relative">
-                <label for="blueInput" class="block text-sm font-medium text-gray-700 mb-1">青 (B):</label>
-                <input type="number" id="blueInput" min="0" max="255" value="0"
-                       class="mt-1 block w-full px-4 py-2 bg-gray-50 border border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500 transition duration-150 ease-in-out text-gray-800 text-lg">
-                <span class="absolute right-3 top-9 text-gray-500 text-sm">0-255</span>
-            </div>
+
+            <button id="findColorBtn"
+                    class="w-full bg-gradient-to-br from-indigo-600 to-purple-700 hover:from-indigo-700 hover:to-purple-800 text-white font-bold py-4 px-8 rounded-xl shadow-xl transform transition duration-300 ease-in-out hover:scale-105 focus:outline-none focus:ring-4 focus:ring-indigo-300 mb-4">
+                最も近い色を見つける
+            </button>
+
+            <button id="resetBtn"
+                    class="w-full bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-4 px-8 rounded-xl shadow-md transform transition duration-300 ease-in-out hover:scale-105 focus:outline-none focus:ring-4 focus:ring-gray-300 mb-8">
+                リセット
+            </button>
         </div>
 
-        <button id="findColorBtn"
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg transform transition duration-300 ease-in-out hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300 mb-6">
-            最も近い色を見つける
-        </button>
+        <!-- 右カラム: 結果表示エリア -->
+        <div id="results" class="bg-indigo-50 border border-indigo-200 text-indigo-800 px-6 py-5 rounded-xl text-center hidden md:block w-full max-w-md mx-auto md:flex-grow pb-8">
+            <p class="font-bold text-xl mb-3">結果:</p>
+            <!-- ここに比較メッセージを表示する要素 -->
+            <p id="comparisonMessage" class="text-base mt-2 mb-4 hidden"></p>
+            <div class="mb-5">
+                <!-- 色番号と色名を段落で分けて表示 -->
+                <p class="font-bold text-lg leading-normal mb-0">
+                    <span class="font-extrabold">色番号: </span><span id="mainColorNumber" class="text-xl font-bold"></span>
+                </p>
+                <p class="font-bold text-2xl leading-normal mt-0 mb-1">
+                    <span class="font-extrabold">色名: </span><span id="mainColorNameActual" class="text-2xl font-bold" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 100%; vertical-align: middle;"></span>
+                </p>
+                <p class="text-base mb-1"><span class="font-bold">RGB値: </span><span id="colorRgb" class="text-lg"></span></p>
+                <p class="text-base"><span class="font-bold">近似率: </span><span id="similarityPercentage" class="text-lg"></span></p>
+                <div id="colorPreview" class="w-32 h-32 mx-auto rounded-full mt-6 border-4 border-indigo-300 shadow-lg"></div>
+            </div>
 
-        <!-- 結果表示エリア -->
-        <div id="results" class="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg text-center mb-6 hidden">
-            <p class="font-medium mb-2">結果:</p>
-            <p><span class="font-bold text-lg">色名: </span><span id="colorName" class="text-xl"></span></p>
-            <p><span class="font-bold text-lg">RGB値: </span><span id="colorRgb" class="text-lg"></span></p>
-            <div id="colorPreview" class="w-24 h-24 mx-auto rounded-full mt-4 border-2 border-blue-300 shadow-md"></div>
+            <div id="otherClosestColors" class="mt-8 pt-6 border-t border-indigo-200 flex flex-wrap justify-around items-stretch">
+                <div id="secondClosest" class="w-1/2 sm:w-1/3 p-2 flex flex-col items-center hidden justify-between">
+                    <div>
+                        <p class="font-bold text-sm mb-1">2番目に近い色:</p>
+                        <p class="text-lg leading-tight mb-0"><span id="secondColorNumber" class="text-xl font-bold"></span></p>
+                        <p class="text-lg leading-tight mt-0 mb-0"><span id="secondColorNameActual" class="text-lg font-semibold" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;"></span></p>
+                        <p class="text-xs leading-tight mb-0"><span id="secondColorRgb"></span></p>
+                        <p class="text-xs leading-tight mt-0"><span id="secondSimilarity"></span></p>
+                    </div>
+                    <div id="secondColorPreview" class="w-20 h-20 rounded-full mt-2 border-2 border-indigo-300 shadow-md flex-shrink-0"></div>
+                </div>
+                <div id="thirdClosest" class="w-1/2 sm:w-1/3 p-2 flex flex-col items-center hidden justify-between">
+                    <div>
+                        <p class="font-bold text-sm mb-1">3番目に近い色:</p>
+                        <p class="text-lg leading-tight mb-0"><span id="thirdColorNumber" class="text-xl font-bold"></span></p>
+                        <p class="text-lg leading-tight mt-0 mb-0"><span id="thirdColorNameActual" class="text-lg font-semibold" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;"></span></p>
+                        <p class="text-xs leading-tight mb-0"><span id="thirdColorRgb"></span></p>
+                        <p class="text-xs leading-tight mt-0"><span id="thirdSimilarity"></span></p>
+                    </div>
+                    <div id="thirdColorPreview" class="w-20 h-20 rounded-full mt-2 border-2 border-indigo-300 shadow-md flex-shrink-0"></div>
+                </div>
+            </div>
         </div>
 
         <!-- エラーメッセージ表示エリア -->
-        <div id="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg hidden" role="alert">
+        <div id="errorMessage" class="bg-red-50 border border-red-300 text-red-700 px-5 py-4 rounded-xl hidden max-w-md mx-auto mt-4">
             <strong class="font-bold">エラー！</strong>
             <span class="block sm:inline" id="errorText"></span>
         </div>
     </div>
 
+    <!-- バージョン表示 -->
+    <div class="fixed bottom-2 right-2 text-gray-400 text-xs z-50">
+        Version 2.1.1
+    </div>
+
     <script>
-        // 登録済み色のリスト（Pythonコードから変換）
+        // 登録済み色のリスト。名前とRGB値をオブジェクトで保存します。
+        // 各色にはカテゴリプロパティが追加されました。
         const registeredColors = [
-            {name:"#001_ホワイト",rgb:[255,255,255]},
-            {name:"#002_バター",rgb:[241,230,178]},
-            {name:"#003_イエロー",rgb:[255,215,0]},
-            {name:"#004_オレンジ",rgb:[255,130,0]},
-            {name:"#005_レッド",rgb:[239,51,64]},
-            {name:"#006_ピンク",rgb:[223,122,153]},
-            {name:"#007_パープル",rgb:[78,0,142]},
-            {name:"#008_ダークブルー",rgb:[0,35,156]},
-            {name:"#009_ブルー",rgb:[0,156,222]},
-            {name:"#010_グリーン",rgb:[0,150,94]},
-            {name:"#011_ペパーミント",rgb:[113,219,212]},
-            {name:"#012_ダークブラウン",rgb:[92,61,49]},
-            {name:"#013_グレー",rgb:[167,168,170]},
-            {name:"#014_ブラック",rgb:[0,0,0]},
-            {name:"#015_クリヤー",rgb:[,,]},
-            {name:"#016_ブラウン",rgb:[153,85,43]},
-            {name:"#017_コーヒーブラウン",rgb:[152,106,76]},
-            {name:"#018_ネールピンク",rgb:[236,195,178]},
-            {name:"#019_ライトブラウン",rgb:[198,169,146]},
-            {name:"#020_マゼンタ",rgb:[239,75,129]},
-            {name:"#021_蛍光イエロー",rgb:[,,]},
-            {name:"#022_蛍光オレンジ",rgb:[,,]},
-            {name:"#023_蛍光グリーン",rgb:[,,]},
-            {name:"#024_蛍光ピンク",rgb:[,,]},
-            {name:"#025_ヒヤシンス",rgb:[72,159,223]},
-            {name:"#026_ミントグリーン",rgb:[128,224,167]},
-            {name:"#027_ラベンダー",rgb:[191,155,222]},
-            {name:"#028_レモンイエロー",rgb:[242,240,161]},
-            {name:"#029_チーズ",rgb:[255,181,0]},
-            {name:"#030_ペールパステルブルー",rgb:[185,217,235]},
-            {name:"#031_コーラルレッド",rgb:[255,109,106]},
-            {name:"#032_ローズパープル",rgb:[191,77,165]},
-            {name:"#033_ライムグリーン",rgb:[122,204,0]},
-            {name:"#034_セルリアンブルー",rgb:[0,169,224]},
-            {name:"#035_パステルダークベージュ",rgb:[255,157,162]},
-            {name:"#036_ラピスラズリ",rgb:[131,141,200]},
-            {name:"#037_パールブルー",rgb:[,,]},
-            {name:"#038_さくらいろ",rgb:[244,166,215]},
-            {name:"#039_アップルグリーン",rgb:[121,190,112]},
-            {name:"#040_ダークローズ",rgb:[215,67,136]},
-            {name:"#041_ラズベリー",rgb:[172,20,90]},
-            {name:"#042_コバルトブルー",rgb:[8,87,195]},
-            {name:"#043_キャラメル",rgb:[244,175,35]},
-            {name:"#044_パロットグリーン",rgb:[0,133,120]},
-            {name:"#045_カラスブラック",rgb:[83,86,90]},
-            {name:"#046_マリンブルー",rgb:[137,171,227]},
-            {name:"#047_マルーンブラウン",rgb:[124,37,41]},
-            {name:"#048_キウイ",rgb:[214,232,101]},
-            {name:"#049_ベージュ",rgb:[241,202,173]},
-            {name:"#050_ローシェンナ",rgb:[220,134,51]},
-            {name:"#051_クリアーラメ",rgb:[,,]},
-            {name:"#052_クリアーレッド",rgb:[,,]},
-            {name:"#053_クリアーイエロー",rgb:[,,]},
-            {name:"#054_クリアーブルー",rgb:[,,]},
-            {name:"#055_クリアーグリーン",rgb:[,,]},
-            {name:"#056_クリアーパープル",rgb:[,,]},
-            {name:"#057_夜光グリーン",rgb:[,,]},
-            {name:"#058_夜光ブルー",rgb:[,,]},
-            {name:"#059_夜光ピンク",rgb:[,,]},
-            {name:"#060_夜光オレンジ",rgb:[,,]},
-            {name:"#061_夜光パープル",rgb:[,,]},
-            {name:"#062_パールホワイト",rgb:[,,]},
-            {name:"#063_ゴールド",rgb:[,,]},
-            {name:"#064_パールコーラル",rgb:[,,]},
-            {name:"#065_パールミント",rgb:[,,]},
-            {name:"#066_パールグリーン",rgb:[,,]},
-            {name:"#067_パールイエロー",rgb:[,,]},
-            {name:"#068_パールピンク",rgb:[,,]},
-            {name:"#069_シルバー",rgb:[,,]},
-            {name:"#070_ダークブラック",rgb:[33,39,33]},
-            {name:"#071_サファイアブルー",rgb:[0,87,183]},
-            {name:"#072_べにひいろ",rgb:[255,88,93]},
-            {name:"#073_ザクロ",rgb:[238,39,55]},
-            {name:"#074_ハナカイドウ",rgb:[252,155,179]},
-            {name:"#075_みずいろ",rgb:[164,219,232]},
-            {name:"#076_アイスミントグリーン",rgb:[185,220,210]},
-            {name:"#077_アイボリー",rgb:[248,245,227]},
-            {name:"#078_ナイルグリーン",rgb:[91,197,0]},
-            {name:"#079_ゴールデンイエロー",rgb:[241,196,0]},
-            {name:"#080_ネイビーブルー",rgb:[3,37,126]},
-            {name:"#081_ペールベージュ",rgb:[255,226,198]},
-            {name:"#082_セレストブルー",rgb:[98,181,229]},
-            {name:"#083_ダークグレー",rgb:[136,139,141]},
-            {name:"#084_ダークグリーン",rgb:[0,73,30]},
-            {name:"#085_はだいろ",rgb:[252,200,155]},
-            {name:"#086_ペールレッド",rgb:[233,205,208]},
-            {name:"#087_ペールグレー",rgb:[208,208,206]},
-            {name:"#088_ペールホワイト",rgb:[221,218,232]},
-            {name:"#089_ペールパープル",rgb:[197,180,227]},
-            {name:"#090_クロッカス",rgb:[198,161,207]},
-            {name:"#091_あおむらさきいろ",rgb:[33,21,81]},
-            {name:"#092_ダークレッド",rgb:[193,0,22]},
-            {name:"#093_カーマイン",rgb:[246,117,153]},
-            {name:"#094_バラ",rgb:[218,24,132]},
-            {name:"#095_ピーチ",rgb:[242,119,198]},
-            {name:"#096_マリーゴールド",rgb:[255,143,28]},
-            {name:"#097_ペールオレンジ",rgb:[255,174,98]},
-            {name:"#098_ジンジャーイエロー",rgb:[222,184,59]},
-            {name:"#099_オリーブ",rgb:[83,84,53]},
-            {name:"#100_ティファニーブルー",rgb:[100,204,201]},
-            {name:"#101_イエローオーカー",rgb:[180,126,0]},
-            {name:"#102_ダークベージュ",rgb:[212,173,103]},
-            {name:"#103_ライトベージュ",rgb:[247,206,215]},
-            {name:"#104_ワスレナグサ",rgb:[165,176,227]},
-            {name:"#105_しょうぶいろ",rgb:[193,167,226]},
-            {name:"#106_しこんいろ",rgb:[205,63,173]},
-            {name:"#107_パンジー",rgb:[128,39,108]},
-            {name:"#108_バイオレット",rgb:[40,0,113]},
-            {name:"#109_イエローベージュ",rgb:[253,208,134]},
-            {name:"#110_フラミンゴ",rgb:[255,160,106]},
-            {name:"#111_スターバックス",rgb:[29,105,96]},
-            {name:"#112_カーネーション",rgb:[249,159,201]},
-            {name:"#113_シアン",rgb:[0,166,200]},
-            {name:"#114_キャメルブラウン",rgb:[191,153,114]},
-            {name:"#115_ココナッツブラウン",rgb:[184,97,37]},
-            {name:"#116_ライトオレンジ",rgb:[,,]},
-            {name:"#117_ピーグリーン",rgb:[167,213,0]},
-            {name:"#118_ライトカーキ",rgb:[223,209,167]},
-            {name:"#119_アイスグリーン",rgb:[212,235,142]},
-            {name:"#120_ダークネイビーブルー",rgb:[34,50,110]},
-            {name:"#121_コンクリートグレー",rgb:[187,188,188]},
-            {name:"#122_ダークフォレストグリーン",rgb:[32,92,64]},
-            {name:"#123_マホガニー",rgb:[170,128,102]},
-            {name:"#124_ワインレッド",rgb:[162,0,103]},
-            {name:"#125_パープルロータス",rgb:[152,115,172]},
-            {name:"#126_ライトラベンダー",rgb:[200,216,235]},
-            {name:"#127_おうどいろ",rgb:[222,188,139]},
-            {name:"#128_ゼニスブルー",rgb:[159,174,229]},
-            {name:"#129_チョコレートブラウン",rgb:[98,52,18]},
-            {name:"#130_レイクブルー",rgb:[84,206,236]},
-            {name:"#131_サクラベージュ",rgb:[245,202,191]},
-            {name:"#132_オパールグリーン",rgb:[0,176,185]},
-            {name:"#133_ライトグリーン",rgb:[199,233,149]},
-            {name:"#134_メイプルレッド",rgb:[255,88,105]},
-            {name:"#135_しゅいろ",rgb:[255,106,57]},
-            {name:"#136_アイスミントブルー",rgb:[221,229,237]},
-            {name:"#137_チョコブラウン",rgb:[94,75,60]},
-            {name:"#138_コルク",rgb:[211,187,168]},
-            {name:"#139_ピンクベージュ",rgb:[225,187,180]},
-            {name:"#140_コーラル",rgb:[236,186,168]},
-            {name:"#141_オリーブグリーン",rgb:[128,140,36]},
-            {name:"#142_ベビーブルー",rgb:[177,201,232]},
-            {name:"#143_レグホーン",rgb:[214,210,196]},
-            {name:"#144_オイスターホワイト",rgb:[215,210,203]},
-            {name:"#145_スカイグレー",rgb:[177,179,179]},
-            {name:"#146_サンドホワイト",rgb:[219,200,182]},
-            {name:"#147_スプリンググリーン",rgb:[227,233,53]},
-            {name:"#148_チャイニーズレッド",rgb:[224,78,57]},
-            {name:"#149_ジェイブルー",rgb:[0,75,135]},
-            {name:"#150_ネオンイエロー",rgb:[247,234,72]},
-            {name:"#151_クリアーライトピンク",rgb:[,,]},
-            {name:"#152_クリアーブラック",rgb:[,,]},
-            {name:"#153_ライラック",rgb:[201,177,208]},
-            {name:"#154_サーモンピンク",rgb:[255,128,139]},
-            {name:"#155_グレープ",rgb:[177,78,181]},
-            {name:"#156_スカイブルー",rgb:[113,197,232]},
-            {name:"#157_クリアーグレー",rgb:[,,]},
-            {name:"#158_ロイヤルパープル",rgb:[135,24,157]},
-            {name:"#159_タントンシー",rgb:[202,188,156]},
-            {name:"#160_カフェオレブラウン",rgb:[197,139,104]},
-            {name:"#161_ダークラベンダー",rgb:[162,120,156]},
-            {name:"#162_ミルクティーブラウン",rgb:[165,136,119]},
-            {name:"#163_アッシュグレー",rgb:[117,120,123]},
-            {name:"#164_ヘーゼルブラウン",rgb:[171,152,157]},
-            {name:"#165_シナモンブラウン",rgb:[214,128,107]},
-            {name:"#166_エバーグリーン",rgb:[80,109,133]},
-            {name:"#167_サンドグレー",rgb:[197,185,172]},
-            {name:"#168_フォググレー",rgb:[190,198,196]},
-            {name:"#169_パーチメント",rgb:[166,159,136]},
-            {name:"#170_ライトキャラメル",rgb:[171,146,120]},
-            {name:"#171_サンドブラウン",rgb:[193,178,162]},
-            {name:"#172_アイビーグリーン",rgb:[146,172,160]},
-            {name:"#173_チャコールグレー",rgb:[76,54,58]},
-            {name:"#174_メロングリーン",rgb:[0,179,136]},
-            {name:"#175_アイスミントライム",rgb:[181,227,216]},
+            {name:"#001_ホワイト",rgb:[255,255,255], category: "NicoRate"},
+            {name:"#002_バター",rgb:[241,230,178], category: "NicoRate"},
+            {name:"#003_イエロー",rgb:[255,215,0], category: "NicoRate"},
+            {name:"#004_オレンジ",rgb:[255,130,0], category: "NicoRate"},
+            {name:"#005_レッド",rgb:[239,51,64], category: "NicoRate"},
+            {name:"#006_ピンク",rgb:[223,122,153], category: "NicoRate"},
+            {name:"#007_パープル",rgb:[78,0,142], category: "NicoRate"},
+            {name:"#008_ダークブルー",rgb:[0,35,156], category: "NicoRate"},
+            {name:"#009_ブルー",rgb:[0,156,222], category: "NicoRate"},
+            {name:"#010_グリーン",rgb:[0,150,94], category: "NicoRate"},
+            {name:"#011_ペパーミント",rgb:[113,219,212], category: "NicoRate"},
+            {name:"#012_ダークブラウン",rgb:[92,61,49], category: "NicoRate"},
+            {name:"#013_グレー",rgb:[167,168,170], category: "NicoRate"},
+            {name:"#014_ブラック",rgb:[0,0,0], category: "NicoRate"},
+            {name:"#016_ブラウン",rgb:[153,85,43], category: "NicoRate"},
+            {name:"#017_コーヒーブラウン",rgb:[152,106,76], category: "NicoRate"},
+            {name:"#018_ネールピンク",rgb:[236,195,178], category: "NicoRate"},
+            {name:"#019_ライトブラウン",rgb:[198,169,146], category: "NicoRate"},
+            {name:"#020_マゼンタ",rgb:[239,75,129], category: "NicoRate"},
+            {name:"#025_ヒヤシンス",rgb:[72,159,223], category: "NicoRate"},
+            {name:"#026_ミントグリーン",rgb:[128,224,167], category: "NicoRate"},
+            {name:"#027_ラベンダー",rgb:[191,155,222], category: "NicoRate"},
+            {name:"#028_レモンイエロー",rgb:[242,240,161], category: "NicoRate"},
+            {name:"#029_チーズ",rgb:[255,181,0], category: "NicoRate"},
+            {name:"#030_ペールパステルブルー",rgb:[185,217,235], category: "NicoRate"},
+            {name:"#031_コーラルレッド",rgb:[255,109,106], category: "NicoRate"},
+            {name:"#032_ローズパープル",rgb:[191,77,165], category: "NicoRate"},
+            {name:"#033_ライムグリーン",rgb:[122,204,0], category: "NicoRate"},
+            {name:"#034_セルリアンブルー",rgb:[0,169,224], category: "NicoRate"},
+            {name:"#035_パステルダークベージュ",rgb:[255,157,162], category: "NicoRate"},
+            {name:"#036_ラピスラズリ",rgb:[131,141,200], category: "NicoRate"},
+            {name:"#038_さくらいろ",rgb:[244,166,215], category: "NicoRate"},
+            {name:"#039_アップルグリーン",rgb:[121,190,112], category: "NicoRate"},
+            {name:"#040_ダークローズ",rgb:[215,67,136], category: "NicoRate"},
+            {name:"#041_ラズベリー",rgb:[172,20,90], category: "NicoRate"},
+            {name:"#042_コバルトブルー",rgb:[8,87,195], category: "NicoRate"},
+            {name:"#043_キャラメル",rgb:[244,175,35], category: "NicoRate"},
+            {name:"#044_パロットグリーン",rgb:[0,133,120], category: "NicoRate"},
+            {name:"#045_カラスブラック",rgb:[83,86,90], category: "NicoRate"},
+            {name:"#046_マリンブルー",rgb:[137,171,227], category: "NicoRate"},
+            {name:"#047_マルーンブラウン",rgb:[124,37,41], category: "NicoRate"},
+            {name:"#048_キウイ",rgb:[214,232,101], category: "NicoRate"},
+            {name:"#049_ベージュ",rgb:[241,202,173], category: "NicoRate"},
+            {name:"#050_ローシェンナ",rgb:[220,134,51], category: "NicoRate"},
+            {name:"#070_ダークブラック",rgb:[33,39,33], category: "NicoRate"},
+            {name:"#071_サファイアブルー",rgb:[0,87,183], category: "NicoRate"},
+            {name:"#072_べにひいろ",rgb:[255,88,93], category: "NicoRate"},
+            {name:"#073_ザクロ",rgb:[238,39,55], category: "NicoRate"},
+            {name:"#074_ハナカイドウ",rgb:[252,155,179], category: "NicoRate"},
+            {name:"#075_みずいろ",rgb:[164,219,232], category: "NicoRate"},
+            {name:"#076_アイスミントグリーン",rgb:[185,220,210], category: "NicoRate"},
+            {name:"#077_アイボリー",rgb:[248,245,227], category: "NicoRate"},
+            {name:"#078_ナイルグリーン",rgb:[91,197,0], category: "NicoRate"},
+            {name:"#079_ゴールデンイエロー",rgb:[241,196,0], category: "NicoRate"},
+            {name:"#080_ネイビーブルー",rgb:[3,37,126], category: "NicoRate"},
+            {name:"#081_ペールベージュ",rgb:[255,226,198], category: "NicoRate"},
+            {name:"#082_セレストブルー",rgb:[98,181,229], category: "NicoRate"},
+            {name:"#083_ダークグレー",rgb:[136,139,141], category: "NicoRate"},
+            {name:"#084_ダークグリーン",rgb:[0,73,30], category: "NicoRate"},
+            {name:"#085_はだいろ",rgb:[252,200,155], category: "NicoRate"},
+            {name:"#086_ペールレッド",rgb:[233,205,208], category: "NicoRate"},
+            {name:"#087_ペールグレー",rgb:[208,208,206], category: "NicoRate"},
+            {name:"#088_ペールホワイト",rgb:[221,218,232], category: "NicoRate"},
+            {name:"#089_ペールパープル",rgb:[197,180,227], category: "NicoRate"},
+            {name:"#090_クロッカス",rgb:[198,161,207], category: "NicoRate"},
+            {name:"#091_あおむらさきいろ",rgb:[33,21,81], category: "NicoRate"},
+            {name:"#092_ダークレッド",rgb:[193,0,22], category: "NicoRate"},
+            {name:"#093_カーマイン",rgb:[246,117,153], category: "NicoRate"},
+            {name:"#094_バラ",rgb:[218,24,132], category: "NicoRate"},
+            {name:"#095_ピーチ",rgb:[242,119,198], category: "NicoRate"},
+            {name:"#096_マリーゴールド",rgb:[255,143,28], category: "NicoRate"},
+            {name:"#097_ペールオレンジ",rgb:[255,174,98], category: "NicoRate"},
+            {name:"#098_ジンジャーイエロー",rgb:[222,184,59], category: "NicoRate"},
+            {name:"#099_オリーブ",rgb:[83,84,53], category: "NicoRate"},
+            {name:"#100_ティファニーブルー",rgb:[100,204,201], category: "NicoRate"},
+            {name:"#101_イエローオーカー",rgb:[180,126,0], category: "NicoRate"},
+            {name:"#102_ダークベージュ",rgb:[212,173,103], category: "NicoRate"},
+            {name:"#103_ライトベージュ",rgb:[247,206,215], category: "NicoRate"},
+            {name:"#104_ワスレナグサ",rgb:[165,176,227], category: "NicoRate"},
+            {name:"#105_しょうぶいろ",rgb:[193,167,226], category: "NicoRate"},
+            {name:"#106_しこんいろ",rgb:[205,63,173], category: "NicoRate"},
+            {name:"#107_パンジー",rgb:[128,39,108], category: "NicoRate"},
+            {name:"#108_バイオレット",rgb:[40,0,113], category: "NicoRate"},
+            {name:"#109_イエローベージュ",rgb:[253,208,134], category: "NicoRate"},
+            {name:"#110_フラミンゴ",rgb:[255,160,106], category: "NicoRate"},
+            {name:"#111_スターバックス",rgb:[29,105,96], category: "NicoRate"},
+            {name:"#112_カーネーション",rgb:[249,159,201], category: "NicoRate"},
+            {name:"#113_シアン",rgb:[0,166,200], category: "NicoRate"},
+            {name:"#114_キャメルブラウン",rgb:[191,153,114], category: "NicoRate"},
+            {name:"#115_ココナッツブラウン",rgb:[184,97,37], category: "NicoRate"},
+            {name:"#117_ピーグリーン",rgb:[167,213,0], category: "NicoRate"},
+            {name:"#118_ライトカーキ",rgb:[223,209,167], category: "NicoRate"},
+            {name:"#119_アイスグリーン",rgb:[212,235,142], category: "NicoRate"},
+            {name:"#120_ダークネイビーブルー",rgb:[34,50,110], category: "NicoRate"},
+            {name:"#121_コンクリートグレー",rgb:[187,188,188], category: "NicoRate"},
+            {name:"#122_ダークフォレストグリーン",rgb:[32,92,64], category: "NicoRate"},
+            {name:"#123_マホガニー",rgb:[170,128,102], category: "NicoRate"},
+            {name:"#124_ワインレッド",rgb:[162,0,103], category: "NicoRate"},
+            {name:"#125_パープルロータス",rgb:[152,115,172], category: "NicoRate"},
+            {name:"#126_ライトラベンダー",rgb:[200,216,235], category: "NicoRate"},
+            {name:"#127_おうどいろ",rgb:[222,188,139], category: "NicoRate"},
+            {name:"#128_ゼニスブルー",rgb:[159,174,229], category: "NicoRate"},
+            {name:"#129_チョコレートブラウン",rgb:[98,52,18], category: "NicoRate"},
+            {name:"#130_レイクブルー",rgb:[84,206,236], category: "NicoRate"},
+            {name:"#131_サクラベージュ",rgb:[245,202,191], category: "NicoRate"},
+            {name:"#132_オパールグリーン",rgb:[0,176,185], category: "NicoRate"},
+            {name:"#133_ライトグリーン",rgb:[199,233,149], category: "NicoRate"},
+            {name:"#134_メイプルレッド",rgb:[255,88,105], category: "NicoRate"},
+            {name:"#135_しゅいろ",rgb:[255,106,57], category: "NicoRate"},
+            {name:"#136_アイスミントブルー",rgb:[221,229,237], category: "NicoRate"},
+            {name:"#137_チョコブラウン",rgb:[94,75,60], category: "NicoRate"},
+            {name:"#138_コルク",rgb:[211,187,168], category: "NicoRate"},
+            {name:"#139_ピンクベージュ",rgb:[225,187,180], category: "NicoRate"},
+            {name:"#140_コーラル",rgb:[236,186,168], category: "NicoRate"},
+            {name:"#141_オリーブグリーン",rgb:[128,140,36], category: "NicoRate"},
+            {name:"#142_ベビーブルー",rgb:[177,201,232], category: "NicoRate"},
+            {name:"#143_レグホーン",rgb:[214,210,196], category: "NicoRate"},
+            {name:"#144_オイスターホワイト",rgb:[215,210,203], category: "NicoRate"},
+            {name:"#145_スカイグレー",rgb:[177,179,179], category: "NicoRate"},
+            {name:"#146_サンドホワイト",rgb:[219,200,182], category: "NicoRate"},
+            {name:"#147_スプリンググリーン",rgb:[227,233,53], category: "NicoRate"},
+            {name:"#148_チャイニーズレッド",rgb:[224,78,57], category: "NicoRate"},
+            {name:"#149_ジェイブルー",rgb:[0,75,135], category: "NicoRate"},
+            {name:"#150_ネオンイエロー",rgb:[247,234,72], category: "NicoRate"},
+            {name:"#153_ライラック",rgb:[201,177,208], category: "NicoRate"},
+            {name:"#154_サーモンピンク",rgb:[255,128,139], category: "NicoRate"},
+            {name:"#155_グレープ",rgb:[177,78,181], category: "NicoRate"},
+            {name:"#156_スカイブルー",rgb:[113,197,232], category: "NicoRate"},
+            {name:"#158_ロイヤルパープル",rgb:[135,24,157], category: "NicoRate"},
+            {name:"#159_タントンシー",rgb:[202,188,156], category: "NicoRate"},
+            {name:"#160_カフェオレブラウン",rgb:[197,139,104], category: "NicoRate"},
+            {name:"#161_ダークラベンダー",rgb:[162,120,156], category: "NicoRate"},
+            {name:"#162_ミルクティーブラウン",rgb:[165,136,119], category: "NicoRate"},
+            {name:"#163_アッシュグレー",rgb:[117,120,123], category: "NicoRate"},
+            {name:"#164_ヘーゼルブラウン",rgb:[171,152,157], category: "NicoRate"},
+            {name:"#165_シナモンブラウン",rgb:[214,128,107], category: "NicoRate"},
+            {name:"#166_エバーグリーン",rgb:[80,109,133], category: "NicoRate"},
+            {name:"#167_サンドグレー",rgb:[197,185,172], category: "NicoRate"},
+            {name:"#168_フォググレー",rgb:[190,198,196], category: "NicoRate"},
+            {name:"#169_パーチメント",rgb:[166,159,136], category: "NicoRate"},
+            {name:"#170_ライトキャラメル",rgb:[171,146,120], category: "NicoRate"},
+            {name:"#171_サンドブラウン",rgb:[193,178,162], category: "NicoRate"},
+            {name:"#172_アイビーグリーン",rgb:[146,172,160], category: "NicoRate"},
+            {name:"#173_チャコールグレー",rgb:[76,54,58], category: "NicoRate"},
+            {name:"#174_メロングリーン",rgb:[0,179,136], category: "NicoRate"},
+            {name:"#175_アイスミントライム",rgb:[181,227,216], category: "NicoRate"},
+            {name:"#191_カッパーレッド",rgb:[186,12,47], category: "NicoRate"},
+            {name:"#192_アルパイングリーン",rgb:[91,92,74], category: "NicoRate"},
+            {name:"#193_ビリジアン",rgb:[0,111,98], category: "NicoRate"},
+            {name:"#194_ピーコックグリーン",rgb:[39,153,137], category: "NicoRate"},
+            {name:"#195_レッドゴールド",rgb:[237,155,51], category: "NicoRate"},
+            {name:"#196_ミッドナイトブルー",rgb:[0,51,73], category: "NicoRate"},
+            {name:"#197_ダークスカイブルー",rgb:[0,125,186], category: "NicoRate"},
+            {name:"#198_ブルーパープル",rgb:[68,73,156], category: "NicoRate"},
+            {name:"#199_キャラメルブラウン",rgb:[164,90,42], category: "NicoRate"},
+            {name:"#200_チャコールブラック",rgb:[49,38,29], category: "NicoRate"},
+            {name:"#201_ひそくいろ",rgb:[164,188,194], category: "NicoRate"},
+            {name:"#202_ターコイズブルー",rgb:[0,133,155], category: "NicoRate"},
+            {name:"#234_ネイビー",rgb:[77,73,190], category: "NicoRate"},
+            {name:"#235_マルベリーパープル",rgb:[165,132,150], category: "NicoRate"},
+            {name:"#236_アイアングレー",rgb:[162,172,171], category: "NicoRate"},
+            {name:"#237_フクシアパープル",rgb:[207,135,157], category: "NicoRate"},
+            {name:"#238_ローズグレー",rgb:[202,167,181], category: "NicoRate"},
+            {name:"#239_ナイルブルー",rgb:[89,190,201], category: "NicoRate"},
+            {name:"#240_フォレストグリーン",rgb:[104,152,129], category: "NicoRate"},
+            {name:"#241_ベビーピンク",rgb:[222,190,210], category: "NicoRate"},
+            {name:"#242_サンフラワー",rgb:[255,200,69], category: "NicoRate"},
+            {name:"#243_ダークピンク",rgb:[205,84,91], category: "NicoRate"},
+            {name:"#244_ライトパープル",rgb:[111,121,189], category: "NicoRate"},
+            {name:"#245_シェルピンク",rgb:[232,146,124], category: "NicoRate"},
+            {name:"#246_サーモン",rgb:[219,123,81], category: "NicoRate"},
+            {name:"#247_ライトカフェオレ",rgb:[173,124,89], category: "NicoRate"},
+            {name:"#248_アンティックゴールド",rgb:[137,122,39], category: "NicoRate"},
+            // フューズビーズの色のリスト
+            {name:"A01_ホワイト",rgb:[255,255,255], category: "フューズビーズ"},
+            {name:"A02_ブラック",rgb:[0,0,0], category: "フューズビーズ"},
+            {name:"A03_タンジェリン",rgb:[246,176,76], category: "フューズビーズ"},
+            {name:"A04_オレンジ",rgb:[237,139,0], category: "フューズビーズ"},
+            {name:"A05_スイカ",rgb:[225,6,0], category: "フューズビーズ"},
+            {name:"A06_レッド",rgb:[186,12,47], category: "フューズビーズ"},
+            {name:"A07_ピンク",rgb:[241,167,220], category: "フューズビーズ"},
+            {name:"A08_ピーチ",rgb:[255,52,179], category: "フューズビーズ"},
+            {name:"A09_ローズ",rgb:[219,33,82], category: "フューズビーズ"},
+            {name:"A10_ライトイエロー",rgb:[242,240,161], category: "フューズビーズ"},
+            {name:"A11_ヨークイエロー",rgb:[255,209,0], category: "フューズビーズ"},
+            {name:"A12_ライトグリーン",rgb:[173,220,145], category: "フューズビーズ"},
+            {name:"A13_レモングリーン",rgb:[135,216,57], category: "フューズビーズ"},
+            {name:"A14_アップルグリーン",rgb:[36,158,107], category: "フューズビーズ"},
+            {name:"A15_ダークグリーン",rgb:[0,124,88], category: "フューズビーズ"},
+            {name:"A16_コーラル",rgb:[255,106,19], category: "フューズビーズ"},
+            {name:"A17_ダークコーラル",rgb:[255,103,31], category: "フューズビーズ"},
+            {name:"A18_ライトブルー",rgb:[170,220,235], category: "フューズビーズ"},
+            {name:"A19_アズールブルー",rgb:[65,182,230], category: "フューズビーズ"},
+            {name:"A20_レイクブルー",rgb:[0,144,218], category: "フューズビーズ"},
+            {name:"A21_ダークブルー",rgb:[0,51,153], category: "フューズビーズ"},
+            {name:"A22_フレッシュ",rgb:[252,191,169], category: "フューズビーズ"},
+            {name:"A23_ベージュ",rgb:[204,153,102], category: "フューズビーズ"},
+            {name:"A24_バターイエロー",rgb:[255,231,128], category: "フューズビーズ"},
+            {name:"A25_ラベンダー",rgb:[167,123,202], category: "フューズビーズ"},
+            {name:"A26_ライトパープル",rgb:[160,94,181], category: "フューズビーズ"},
+            {name:"A27_ダークパープル",rgb:[51,0,114], category: "フューズビーズ"},
+            {name:"A28_ソイルブラウン",rgb:[180,126,0], category: "フューズビーズ"},
+            {name:"A29_ライトブラウン",rgb:[164,73,61], category: "フューズビーズ"},
+            {name:"A30_バーミリオン",rgb:[122,62,44], category: "フューズビーズ"},
+            {name:"A31_ミルクチョコブラウン",rgb:[123,77,53], category: "フューズビーズ"},
+            {name:"A32_コーヒーブラウン",rgb:[92,71,56], category: "フューズビーズ"},
+            {name:"A33_ライトグレー",rgb:[155,155,155], category: "フューズビーズ"},
+            {name:"A34_ダークグレー",rgb:[118,119,119], category: "フューズビーズ"},
+            {name:"A35_シルバー",rgb:[160,159,157], category: "フューズビーズ"},
+            {name:"A36_ダークピンク",rgb:[201,128,158], category: "フューズビーズ"},
+            {name:"A37_ブルー",rgb:[20,123,209], category: "フューズビーズ"},
+            {name:"A38_トルコブルー",rgb:[105,179,231], category: "フューズビーズ"},
+            {name:"A39_ラムネ",rgb:[153,214,234], category: "フューズビーズ"},
+            {name:"A40_マスカット",rgb:[206,220,0], category: "フューズビーズ"},
+            {name:"A41_パステルイエロー",rgb:[246,235,97], category: "フューズビーズ"},
+            {name:"A42_イエロー",rgb:[250,224,83], category: "フューズビーズ"},
+            {name:"A43_クリムゾンレッド",rgb:[165,0,52], category: "フューズビーズ"},
+            {name:"A44_ライトコーラル",rgb:[255,163,139], category: "フューズビーズ"},
+            {name:"A45_メロングリーン",rgb:[93,219,93], category: "フューズビーズ"},
+            {name:"A46_レモン",rgb:[243,234,93], category: "フューズビーズ"},
+            {name:"A47_ライトベージュ",rgb:[243,207,179], category: "フューズビーズ"},
+            {name:"A48_ゴールデンイエロー",rgb:[255,199,44], category: "フューズビーズ"},
+            {name:"A49_ディープピンク",rgb:[236,134,208], category: "フューズビーズ"},
+            {name:"A50_ライトラベンダー",rgb:[197,180,227], category: "フューズビーズ"},
+            {name:"A51_アイボリー",rgb:[252,251,205], category: "フューズビーズ"},
+            {name:"A52_パープル",rgb:[74,31,135], category: "フューズビーズ"},
+            {name:"A53_ライム",rgb:[115,211,60], category: "フューズビーズ"},
+            {name:"A54_ピーコックブルー",rgb:[0,178,169], category: "フューズビーズ"},
+            {name:"A55_ジェイドグリーン",rgb:[108,194,74], category: "フューズビーズ"},
+            {name:"A56_グレー",rgb:[136,139,141], category: "フューズビーズ"},
+            {name:"A57_ブラッドレッド",rgb:[188,4,35], category: "フューズビーズ"},
+            {name:"A58_ミッドナイトブルー",rgb:[5,8,73], category: "フューズビーズ"},
+            {name:"A59_ダークレッド",rgb:[83,26,35], category: "フューズビーズ"},
+            {name:"A60_パステルアクア",rgb:[158,229,176], category: "フューズビーズ"},
+            {name:"A61_ハネデュー",rgb:[241,235,156], category: "フューズビーズ"},
+            {name:"A62_パステルレッド",rgb:[252,63,63], category: "フューズビーズ"},
+            {name:"A63_パステルパルム",rgb:[234,190,219], category: "フューズビーズ"},
+            {name:"A64_パステルベリー",rgb:[165,0,80], category: "フューズビーズ"},
+            {name:"A65_パステルオレンジ",rgb:[239,129,46], category: "フューズビーズ"},
+            {name:"A66_パステルピンク",rgb:[252,108,133], category: "フューズビーズ"},
+            {name:"A67_パステルパープル",rgb:[177,78,181], category: "フューズビーズ"},
+            {name:"A68_パステルブルー",rgb:[105,194,238], category: "フューズビーズ"},
+            {name:"A69_マットブラック",rgb:[35,40,43], category: "フューズビーズ"},
+            {name:"A70_ダークフォレストグリーン",rgb:[24,48,40], category: "フューズビーズ"},
+            {name:"A71_ブライトイエロー",rgb:[234,170,0], category: "フューズビーズ"},
+            {name:"A72_クリームチェダーイエロー",rgb:[255,197,110], category: "フューズビーズ"},
+            {name:"A73_キャラメルブラウン",rgb:[184,97,37], category: "フューズビーズ"},
+            {name:"A74_ミルクティーブラウン",rgb:[205,178,119], category: "フューズビーズ"},
+            {name:"A75_シナモンブラウン",rgb:[181,129,80], category: "フューズビーズ"},
+            {name:"A76_サーモンピンク",rgb:[255,109,106], category: "フューズビーズ"},
+            {name:"A77_コンビーフピンク",rgb:[170,87,97], category: "フューズビーズ"},
+            {name:"A78_サラミレッド",rgb:[92,19,27], category: "フューズビーズ"},
+            {name:"A79_アイスブルー",rgb:[89,213,216], category: "フューズビーズ"},
+            {name:"A80_アルノブルー",rgb:[0,174,199], category: "フューズビーズ"},
+            {name:"A81_ターコイズ",rgb:[72,169,197], category: "フューズビーズ"},
+            {name:"A82_セルリアンブルー",rgb:[0,174,214], category: "フューズビーズ"},
+            {name:"A83_コバルトブルー",rgb:[0,133,173], category: "フューズビーズ"},
+            {name:"A84_オリーブグリーン",rgb:[155,188,17], category: "フューズビーズ"},
+            {name:"A85_ダークオリーブグリーン",rgb:[153,155,48], category: "フューズビーズ"},
+            {name:"A86_ピーマングリーン",rgb:[0,133,34], category: "フューズビーズ"},
+            {name:"A87_ゴーストホワイト",rgb:[239,239,239], category: "フューズビーズ"},
+            {name:"A88_アッシュホワイト",rgb:[209,209,209], category: "フューズビーズ"},
+            {name:"A89_コンクリートグレー",rgb:[187,188,188], category: "フューズビーズ"},
+            {name:"A90_カーボングレー",rgb:[72,73,85], category: "フューズビーズ"},
+            {name:"A91_クレセントイエロー",rgb:[222,185,71], category: "フューズビーズ"},
+            {name:"A92_ペールベージュ",rgb:[218,182,152], category: "フューズビーズ"},
+            {name:"A93_ソーセージピンク",rgb:[244,169,153], category: "フューズビーズ"},
+            {name:"A94_ローズオレンジ",rgb:[238,125,103], category: "フューズビーズ"},
+            {name:"A95_アプリコットオレンジ",rgb:[240,134,97], category: "フューズビーズ"},
+            {name:"A96_キャロットオレンジ",rgb:[212,114,42], category: "フューズビーズ"},
+            {name:"A97_ヒマラヤブルー",rgb:[100,172,223], category: "フューズビーズ"},
+            {name:"A98_アカプルコブルー",rgb:[100,194,220], category: "フューズビーズ"},
+            {name:"A99_ボニーブルー",rgb:[79,159,179], category: "フューズビーズ"},
+            {name:"A100_エレクトリックブルー",rgb:[49,150,221], category: "フューズビーズ"},
+            {name:"A101_アメリカンブルー",rgb:[27,108,182], category: "フューズビーズ"},
+            {name:"A102_エンパイアブルー",rgb:[8,57,128], category: "フューズビーズ"},
+            {name:"A103_アドニスブルー",rgb:[10,102,139], category: "フューズビーズ"},
+            {name:"A104_ダークターコイズ",rgb:[8,91,110], category: "フューズビーズ"},
+            {name:"A105_ガーターブルー",rgb:[0,78,120], category: "フューズビーズ"},
+            {name:"A106_ダックブルー",rgb:[0,85,116], category: "フューズビーズ"},
+            {name:"A107_ミルキーカーキ",rgb:[204,190,128], category: "フューズビーズ"},
+            {name:"A108_パステルカーキ",rgb:[164,147,80], category: "フューズビーズ"},
+            {name:"A109_ライトカーキ",rgb:[158,136,60], category: "フューズビーズ"},
+            {name:"A110_カーキ",rgb:[118,108,43], category: "フューズビーズ"},
+            {name:"A111_ダークカーキ",rgb:[121,95,38], category: "フューズビーズ"},
+            {name:"A112_ミルキーモスグリーン",rgb:[186,184,162], category: "フューズビーズ"},
+            {name:"A113_パステルモスグリーン",rgb:[114,140,84], category: "フューズビーズ"},
+            {name:"A114_ライトモスグリーン",rgb:[126,124,68], category: "フューズビーズ"},
+            {name:"A115_モスグリーン",rgb:[100,105,46], category: "フューズビーズ"},
+            {name:"A116_ダークモスグリーン",rgb:[78,88,44], category: "フューズビーズ"},
+            {name:"A117_アイビーグリーン",rgb:[74,94,45], category: "フューズビーズ"},
+            {name:"A118_フロスティブルー",rgb:[113,196,82], category: "フューズビーズ"},
+            {name:"A119_ポーラーミント",rgb:[102,204,153], category: "フューズビーズ"},
+            {name:"A120_セラドン",rgb:[86,154,131], category: "フューズビーズ"},
+            {name:"A121_ドーミーグリーン",rgb:[20,194,91], category: "フューズビーズ"},
+            {name:"A122_パロットグリーン",rgb:[24,168,24], category: "フューズビーズ"},
+            {name:"A123_ケールグリーン",rgb:[4,85,46], category: "フューズビーズ"},
+            {name:"A124_ライトビリジアン",rgb:[19,107,90], category: "フューズビーズ"},
+            {name:"A125_ビリジアン",rgb:[5,70,65], category: "フューズビーズ"},
+            {name:"A126_ミルキーローズ",rgb:[217,182,214], category: "フューズビーズ"},
+            {name:"A127_ミルキーグレープ",rgb:[173,98,164], category: "フューズビーズ"},
+            {name:"A128_ミルキーピーチ",rgb:[230,140,163], category: "フューズビーズ"},
+            {name:"A129_フラゴナールピンク",rgb:[222,84,121], category: "フューズビーズ"},
+            {name:"A130_ミルキーラベンダー",rgb:[158,130,186], category: "フューズビーズ"},
+            {name:"A131_フラミンゴピンク",rgb:[232,65,107], category: "フューズビーズ"},
+            {name:"A132_ピンクパープル",rgb:[183,56,143], category: "フューズビーズ"},
+            {name:"A133_アメジストパープル",rgb:[88,31,126], category: "フューズビーズ"},
+            {name:"A134_ペールアイリス",rgb:[140,163,212], category: "フューズビーズ"},
+            {name:"A135_ミルキーウィステリア",rgb:[154,154,204], category: "フューズビーズ"},
+            {name:"A136_ミルキーウルトラマリン",rgb:[89,129,193], category: "フューズビーズ"},
+            {name:"A137_ライトウルトラマリン",rgb:[65,102,176], category: "フューズビーズ"},
+            {name:"A138_アガパンサスブルー",rgb:[71,95,171], category: "フューズビーズ"},
+            {name:"A139_ライトサルビアブルー",rgb:[55,69,147], category: "フューズビーズ"},
+            {name:"A140_ウルトラマリン",rgb:[61,86,165], category: "フューズビーズ"},
+            {name:"A141_ディープウルトラマリン",rgb:[41,66,153], category: "フューズビーズ"},
+            {name:"A142_サルビアブルー",rgb:[37,38,138], category: "フューズビーズ"},
+            {name:"A143_ネイビー",rgb:[26,47,111], category: "フューズビーズ"},
+            {name:"A144_ミルキーマスカット",rgb:[211,201,93], category: "フューズビーズ"},
+            {name:"A145_ワインレッド",rgb:[81,9,24], category: "フューズビーズ"},
+            {name:"A146_ライトセラドン",rgb:[100,179,158], category: "フューズビーズ"},
+            {name:"A147_チョコブラウン",rgb:[99,67,56], category: "フューズビーズ"},
+            {name:"A148_ライトバターイエロー",rgb:[237,211,158], category: "フューズビーズ"},
+            {name:"A149_ウィステリア",rgb:[105,99,171], category: "フューズビーズ"},
+            {name:"A150_ダークアイビーグリーン",rgb:[43,63,31], category: "フューズビーズ"},
+            {name:"A151_ライトウィステリア",rgb:[151,145,197], category: "フューズビーズ"},
+            {name:"A152_ホワイトウィステリア",rgb:[184,189,224], category: "フューズビーズ"},
+            {name:"A153_ミルキーベージュ",rgb:[249,200,152], category: "フューズビーズ"},
+            {name:"A154_カフェオレブラウン",rgb:[195,144,105], category: "フューズビーズ"},
+            {name:"A155_アイアングレー",rgb:[68,80,91], category: "フューズビーズ"},
+            {name:"A156_ミリタリーグレー",rgb:[62,73,85], category: "フューズビーズ"},
+            {name:"A157_チャコールブラック",rgb:[32,40,48], category: "フューズビーズ"},
         ];
 
-        // HTML要素への参照を取得
-        const redInput = document.getElementById('redInput');
-        const greenInput = document.getElementById('greenInput');
-        const blueInput = document.getElementById('blueInput');
+        // DOM要素への参照を取得
+        const appContainer = document.getElementById('app-container');
         const findColorBtn = document.getElementById('findColorBtn');
+        const resetBtn = document.getElementById('resetBtn');
         const resultsDiv = document.getElementById('results');
-        const colorNameSpan = document.getElementById('colorName');
+        
+        // メイン結果用の新しい要素ID
+        const mainColorNumberSpan = document.getElementById('mainColorNumber');
+        const mainColorNameActualSpan = document.getElementById('mainColorNameActual');
+
         const colorRgbSpan = document.getElementById('colorRgb');
+        const similarityPercentageSpan = document.getElementById('similarityPercentage');
         const colorPreviewDiv = document.getElementById('colorPreview');
         const errorMessageDiv = document.getElementById('errorMessage');
         const errorTextSpan = document.getElementById('errorText');
+        
+        const secondClosestDiv = document.getElementById('secondClosest');
+        const secondColorNumberSpan = document.getElementById('secondColorNumber');
+        const secondColorNameActualSpan = document.getElementById('secondColorNameActual');
+        const secondColorRgbSpan = document.getElementById('secondColorRgb');
+        const secondSimilaritySpan = document.getElementById('secondSimilarity');
+        const secondColorPreviewDiv = document.getElementById('secondColorPreview');
+        
+        const thirdClosestDiv = document.getElementById('thirdClosest');
+        const thirdColorNumberSpan = document.getElementById('thirdColorNumber');
+        const thirdColorNameActualSpan = document.getElementById('thirdColorNameActual');
+        const thirdColorRgbSpan = document.getElementById('thirdColorRgb');
+        const thirdSimilaritySpan = document.getElementById('thirdSimilarity');
+        const thirdColorPreviewDiv = document.getElementById('thirdColorPreview');
+
+        // 比較メッセージ表示用の要素
+        const comparisonMessageElement = document.getElementById('comparisonMessage');
+
+        // RGB空間での最大距離を事前に計算
+        const MAX_RGB_DISTANCE = Math.sqrt(Math.pow(255 - 0, 2) + Math.pow(255 - 0, 2) + Math.pow(255 - 0, 2)); // 約441.67
+
+        // 以前の検索結果を保存する変数
+        let previousClosestColor = null;
+
+        // 現在選択されているフィルタカテゴリ
+        let currentFilterCategory = 'both'; // 初期値は「両方」
 
         /**
          * 2つのRGB値間のユークリッド距離を計算します。
-         * Calculates the Euclidean distance between two RGB colors.
          * @param {number[]} color1 - 最初のRGB色 [R, G, B]。
          * @param {number[]} color2 - 2番目のRGB色 [R, G, B]。
          * @returns {number} 2つの色の間の距離。
@@ -286,82 +615,373 @@
         }
 
         /**
-         * 入力されたRGB値に最も近い色を登録済みリストから見つけます。
-         * Finds the closest color to the input RGB value from a registered list.
-         * @param {number[]} inputRgb - 検索したいRGB色 [R, G, B]。
-         * @param {object[]} colorsList - { name: string, rgb: number[] } のオブジェクトのリスト。
-         * @returns {{name: string, rgb: number[]} | null} 最も近い色名とそのRGB値、または見つからなかった場合はnull。
+         * フィルタカテゴリに基づいて色リストを絞り込みます。
+         * @param {object[]} allColors - 全ての登録済み色のリスト。
+         * @param {string} filterCategory - フィルタリングするカテゴリ ('both', 'NicoRate', 'フューズビーズ')。
+         * @returns {object[]} 絞り込まれた色のリスト。
          */
-        function findClosestColor(inputRgb, colorsList) {
-            if (!colorsList || colorsList.length === 0) {
-                return null;
+        function getFilteredColors(allColors, filterCategory) {
+            if (filterCategory === 'both') {
+                return allColors;
+            } else {
+                return allColors.filter(color => color.category === filterCategory);
             }
+        }
 
-            let closestColor = null;
-            let minDistance = Infinity;
-
+        /**
+         * 入力されたRGB値から、指定された色リストの全ての色との距離を計算し、距離の近い順にソートして返します。
+         * @param {number[]} inputRgb - 検索したいRGB色 [R, G, B]。
+         * @param {object[]} colorsList - { name: string, rgb: number[], category: string } のオブジェクトのリスト。
+         * @returns {{name: string, rgb: number[], distance: number, category: string}[]} 距離を含む色のオブジェクトのソートされたリスト。
+         */
+        function getSortedColorsByDistance(inputRgb, colorsList) {
+            const colorsWithDistance = [];
             for (const color of colorsList) {
                 const distance = calculateRgbDistance(inputRgb, color.rgb);
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closestColor = color;
-                }
+                colorsWithDistance.push({ ...color, distance: distance });
             }
-            return closestColor;
+            colorsWithDistance.sort((a, b) => a.distance - b.distance);
+            return colorsWithDistance;
+        }
+
+        /**
+         * 距離に基づいて近似率 (0-100%) を計算します。
+         * @param {number} distance - 計算された色間の距離。
+         * @returns {string} フォーマットされた近似率の文字列（例: "95.23%"）。
+         */
+        function calculateSimilarityPercentage(distance) {
+            const normalizedDistance = distance / MAX_RGB_DISTANCE;
+            const similarity = ((1 - normalizedDistance) * 100);
+            return `${Math.max(0, similarity).toFixed(2)}%`;
         }
 
         /**
          * エラーメッセージを表示します。
-         * Displays an error message.
          * @param {string} message - 表示するエラーメッセージ。
          */
         function displayError(message) {
-            resultsDiv.classList.add('hidden'); // 結果を非表示
+            resultsDiv.classList.add('hidden');
+            resultsDiv.classList.remove('md:block'); 
             errorMessageDiv.classList.remove('hidden');
             errorTextSpan.textContent = message;
+            previousClosestColor = null; 
+            comparisonMessageElement.classList.add('hidden'); 
         }
 
         /**
-         * 結果を表示します。
-         * Displays the results.
-         * @param {string} name - 見つかった色名。
-         * @param {number[]} rgb - 見つかった色のRGB値。
+         * 結果を表示します。1番目、2番目、3番目に近い色を表示します。
+         * @param {Array} sortedColors - 距離でソートされた色オブジェクトのリスト。
          */
-        function displayResults(name, rgb) {
-            errorMessageDiv.classList.add('hidden'); // エラーを非表示
-            resultsDiv.classList.remove('hidden');
-            colorNameSpan.textContent = name;
-            colorRgbSpan.textContent = `(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-            colorPreviewDiv.style.backgroundColor = `rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})`;
-        }
+        function displayResults(sortedColors) {
+            errorMessageDiv.classList.add('hidden');
+            resultsDiv.classList.remove('hidden'); 
 
-        // ボタンクリックイベントリスナー
-        findColorBtn.addEventListener('click', () => {
-            const r = parseInt(redInput.value);
-            const g = parseInt(greenInput.value);
-            const b = parseInt(blueInput.value);
+            // 比較メッセージを一旦クリアして非表示にする
+            comparisonMessageElement.classList.add('hidden');
+            comparisonMessageElement.textContent = '';
 
-            // 入力値のバリデーション
-            if (isNaN(r) || isNaN(g) || isNaN(b) || r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
-                displayError("RGB値は0から255の間の整数でなければなりません。");
+            // 画面幅によってレイアウトを切り替える
+            if (window.innerWidth >= 768) { 
+                resultsDiv.classList.add('md:block'); 
+            } else {
+                resultsDiv.classList.remove('hidden'); 
+                resultsDiv.classList.remove('md:block'); 
+                // スマホの場合、結果が表示されたら一番下までスクロール
+                requestAnimationFrame(() => {
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                });
+            }
+
+            // すべての補助表示を初期状態（非表示）に戻す
+            secondClosestDiv.classList.add('hidden');
+            thirdClosestDiv.classList.add('hidden');
+
+            // 1番目に近い色を表示
+            if (sortedColors.length > 0) {
+                const closest = sortedColors[0];
+                // 色番号と色名を分離
+                const [colorNumber, actualColorName] = closest.name.split('_');
+
+                // メインの結果表示要素にセット
+                mainColorNumberSpan.textContent = colorNumber;
+                mainColorNameActualSpan.textContent = actualColorName;
+                
+                colorRgbSpan.textContent = `(${closest.rgb[0]}, ${closest.rgb[1]}, ${closest.rgb[2]})`;
+                colorPreviewDiv.style.backgroundColor = `rgb(${closest.rgb[0]}, ${closest.rgb[1]}, ${closest.rgb[2]})`;
+                similarityPercentageSpan.textContent = calculateSimilarityPercentage(closest.distance);
+
+                // --- 比較ロジック ---
+                if (previousClosestColor && previousClosestColor.name === closest.name) {
+                    const currentDistance = closest.distance;
+                    const prevDistance = previousClosestColor.distance;
+
+                    let message = '';
+                    // 距離が完全に同じ場合は特定のメッセージを表示
+                    if (currentDistance === prevDistance) {
+                        message = '前回と同じくらい近い色です。';
+                    } else {
+                        const diff = Math.abs(currentDistance - prevDistance);
+                        const diffPercentage = (diff / MAX_RGB_DISTANCE * 100).toFixed(2); 
+
+                        // 差分パーセンテージが0.00%に丸められるが、実際には距離が異なる場合
+                        if (diffPercentage === '0.00' && diff > 0) {
+                            if (currentDistance < prevDistance) {
+                                message = '前回より<span class="font-bold text-green-700">わずかに</span>近くなりました！';
+                            } else {
+                                message = '前回より<span class="font-bold text-red-700">わずかに</span>遠くなりました。';
+                            }
+                        } else {
+                            // 0.00%以外の明確な差がある場合
+                            if (currentDistance < prevDistance) {
+                                message = `前回より <span class="font-bold text-green-700">${diffPercentage}%</span> 近くなりました！`;
+                            } else {
+                                message = `前回より <span class="font-bold text-red-700">${diffPercentage}%</span> 遠くなりました。`;
+                            }
+                        }
+                    }
+                    comparisonMessageElement.innerHTML = message;
+                    comparisonMessageElement.classList.remove('hidden');
+                }
+                // --- 比較ロジック終了 ---
+
+                // 次の検索のために現在の最も近い色を保存
+                previousClosestColor = { ...closest }; 
+            } else {
+                displayError("最も近い色が見つかりませんでした。");
+                previousClosestColor = null; // 結果がない場合は以前の情報をリセット
                 return;
             }
 
-            const inputColor = [r, g, b];
-            const closest = findClosestColor(inputColor, registeredColors);
-
-            if (closest) {
-                displayResults(closest.name, closest.rgb);
-            } else {
-                displayError("エラー: 登録されている色がありません。");
+            // 2番目と3番目に近い色を表示 (存在する場合)
+            if (sortedColors.length > 1) {
+                const second = sortedColors[1];
+                const [secondColorNumber, secondActualColorName] = second.name.split('_');
+                secondClosestDiv.classList.remove('hidden');
+                
+                secondColorNumberSpan.textContent = secondColorNumber;
+                secondColorNameActualSpan.textContent = secondActualColorName;
+                secondColorRgbSpan.textContent = `(${second.rgb[0]}, ${second.rgb[1]}, ${second.rgb[2]})`;
+                secondSimilaritySpan.textContent = calculateSimilarityPercentage(second.distance);
+                secondColorPreviewDiv.style.backgroundColor = `rgb(${second.rgb[0]}, ${second.rgb[1]}, ${second.rgb[2]})`;
             }
+            if (sortedColors.length > 2) {
+                const third = sortedColors[2];
+                const [thirdColorNumber, thirdActualColorName] = third.name.split('_');
+                thirdClosestDiv.classList.remove('hidden');
+
+                thirdColorNumberSpan.textContent = thirdColorNumber;
+                thirdColorNameActualSpan.textContent = thirdActualColorName;
+                thirdColorRgbSpan.textContent = `(${third.rgb[0]}, ${third.rgb[1]}, ${third.rgb[2]})`;
+                thirdSimilaritySpan.textContent = calculateSimilarityPercentage(third.distance);
+                thirdColorPreviewDiv.style.backgroundColor = `rgb(${third.rgb[0]}, ${third.rgb[1]}, ${third.rgb[2]})`;
+            }
+        }
+
+        /**
+         * 入力欄をクリアし、結果とエラーメッセージを非表示にします。
+         * ラジオボタンの選択状態は変更しません。
+         */
+        function clearResultsAndErrorMessages() {
+            document.querySelectorAll('.input-group input').forEach(input => input.value = '');
+            resultsDiv.classList.add('hidden');
+            resultsDiv.classList.remove('md:block'); 
+            errorMessageDiv.classList.add('hidden');
+            secondClosestDiv.classList.add('hidden');
+            thirdClosestDiv.classList.add('hidden');
+            previousClosestColor = null; 
+            comparisonMessageElement.classList.add('hidden'); 
+            comparisonMessageElement.textContent = ''; 
+        }
+
+        /**
+         * 全ての入力欄と表示をリセットし、ラジオボタンの選択も「両方」に戻します。
+         */
+        function resetAll() {
+            clearResultsAndErrorMessages();
+            document.querySelector('input[name="colorFilter"][value="both"]').checked = true;
+            currentFilterCategory = 'both';
+        }
+
+
+        /**
+         * 入力中に数字以外の文字を削除し、0-255の範囲に収まるように修正するハンドラ
+         * @param {Event} event - inputイベントオブジェクト
+         */
+        function normalizeRgbInput(event) {
+            const input = event.target;
+            let value = input.value;
+
+            if (value === '') {
+                input.value = '';
+                return;
+            }
+
+            let numericValue;
+            if (/^-?\d+$/.test(value)) {
+                numericValue = parseInt(value, 10);
+            } else {
+                value = value.replace(/[^0-9]/g, '');
+                numericValue = parseInt(value, 10);
+            }
+
+            if (isNaN(numericValue)) {
+                input.value = '';
+                return;
+            }
+
+            numericValue = Math.max(0, Math.min(255, numericValue));
+            input.value = numericValue.toString();
+        }
+
+        /**
+         * RGB入力値を増減させる関数
+         * @param {HTMLInputElement} inputElement - 操作対象の入力欄要素
+         * @param {number} delta - 増減させる量 (+1 or -1)
+         */
+        function adjustRgbValue(inputElement, delta) {
+            let currentValue = parseInt(inputElement.value || '0', 10); 
+            let newValue = currentValue + delta;
+            newValue = Math.max(0, Math.min(255, newValue));
+            inputElement.value = newValue.toString();
+            inputElement.dispatchEvent(new Event('input'));
+        }
+
+        // 連続増減のための変数と関数
+        let intervalId = null;
+        let timeoutId = null;
+
+        /**
+         * 連続増減を開始する
+         * @param {HTMLInputElement} inputElement - 対象の入力欄
+         * @param {number} delta - 増減量
+         * @param {number} initialDelay - 連続開始までの遅延 (ms)
+         * @param {number} repeatDelay - 連続増減の間隔 (ms)
+         */
+        function startContinuousAdjustment(inputElement, delta, initialDelay = 200, repeatDelay = 50) {
+            adjustRgbValue(inputElement, delta); // 最初に一度だけ調整
+            timeoutId = setTimeout(() => {
+                intervalId = setInterval(() => {
+                    adjustRgbValue(inputElement, delta);
+                }, repeatDelay);
+            }, initialDelay);
+        }
+
+        /**
+         * 連続増減を停止する
+         */
+        function stopContinuousAdjustment() {
+            clearTimeout(timeoutId);
+            clearInterval(intervalId);
+            timeoutId = null;
+            intervalId = null;
+        }
+
+        // 入力フィールドと増減ボタンのペアを定義
+        const rgbControls = [
+            { input: document.getElementById('redInput'), incBtn: document.getElementById('redIncBtn'), decBtn: document.getElementById('redDecBtn') },
+            { input: document.getElementById('greenInput'), incBtn: document.getElementById('greenIncBtn'), decBtn: document.getElementById('greenDecBtn') },
+            { input: document.getElementById('blueInput'), incBtn: document.getElementById('blueIncBtn'), decBtn: document.getElementById('blueDecBtn') }
+        ];
+
+        // 各RGB入力フィールドとボタンにイベントリスナーを設定
+        rgbControls.forEach(control => {
+            control.input.addEventListener('input', normalizeRgbInput);
+            
+            // マウスイベント
+            control.incBtn.addEventListener('mousedown', () => startContinuousAdjustment(control.input, 1));
+            control.incBtn.addEventListener('mouseup', stopContinuousAdjustment);
+            control.incBtn.addEventListener('mouseleave', stopContinuousAdjustment); // ボタンからマウスが離れた時も停止
+
+            control.decBtn.addEventListener('mousedown', () => startContinuousAdjustment(control.input, -1));
+            control.decBtn.addEventListener('mouseup', stopContinuousAdjustment);
+            control.decBtn.addEventListener('mouseleave', stopContinuousAdjustment); // ボタンからマウスが離れた時も停止
+
+            // タッチイベント (モバイル対応)
+            control.incBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // デフォルトの動作（スクロールなど）をキャンセル
+                startContinuousAdjustment(control.input, 1);
+            }, { passive: false }); // passive: false を設定して preventDefault を許可
+            control.incBtn.addEventListener('touchend', stopContinuousAdjustment);
+            control.incBtn.addEventListener('touchcancel', stopContinuousAdjustment); // タッチキャンセル時も停止
+
+            control.decBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // デフォルトの動作をキャンセル
+                startContinuousAdjustment(control.input, -1);
+            }, { passive: false });
+            control.decBtn.addEventListener('touchend', stopContinuousAdjustment);
+            control.decBtn.addEventListener('touchcancel', stopContinuousAdjustment); // タッチキャンセル時も停止
+
+            // フォーカスが外れた時にも値を正規化
+            control.input.addEventListener('blur', normalizeRgbInput);
         });
 
-        // 初期状態で結果とエラーメッセージを非表示にする
-        window.onload = () => {
-            resultsDiv.classList.add('hidden');
-            errorMessageDiv.classList.add('hidden');
-        };
+        // "色を見つける" ボタンのイベントリスナー
+        findColorBtn.addEventListener('click', () => {
+            const r = parseInt(document.getElementById('redInput').value);
+            const g = parseInt(document.getElementById('greenInput').value);
+            const b = parseInt(document.getElementById('blueInput').value);
+
+            // 入力値のバリデーション
+            if (isNaN(r) || isNaN(g) || isNaN(b) || r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+                displayError("RGB値は0から255の間の数値を入力してください。");
+                return;
+            }
+
+            const inputRgb = [r, g, b];
+            // 現在選択されているカテゴリに基づいて色リストをフィルタリング
+            const filteredColors = getFilteredColors(registeredColors, currentFilterCategory);
+            
+            // フィルタリングされた色リストが空の場合
+            if (filteredColors.length === 0) {
+                displayError("選択されたカテゴリに該当する色がありません。");
+                // 結果表示エリアを非表示にする
+                resultsDiv.classList.add('hidden');
+                resultsDiv.classList.remove('md:block');
+                previousClosestColor = null; // 以前の比較情報をリセット
+                return;
+            }
+
+            const sortedColors = getSortedColorsByDistance(inputRgb, filteredColors);
+            displayResults(sortedColors);
+        });
+
+        // カテゴリフィルタのラジオボタンのイベントリスナーを設定
+        document.querySelectorAll('input[name="colorFilter"]').forEach(radio => {
+            radio.addEventListener('change', (event) => {
+                currentFilterCategory = event.target.value;
+                // RGB入力が全て埋まっているかチェック
+                const r = document.getElementById('redInput').value;
+                const g = document.getElementById('greenInput').value;
+                const b = document.getElementById('blueInput').value;
+
+                if (r !== '' && g !== '' && b !== '') {
+                    // 入力が全て埋まっている場合は自動で検索を再実行
+                    findColorBtn.click();
+                } else {
+                    // 入力が不完全な場合は、結果表示エリアとエラーメッセージを非表示にするだけ
+                    clearResultsAndErrorMessages();
+                }
+            });
+        });
+
+
+        // "リセット" ボタンのイベントリスナー
+        resetBtn.addEventListener('click', resetAll); // 全てリセットする関数を呼び出す
+
+        // 初期表示をリセット
+        resetAll(); // アプリ起動時も全てリセット
+        // ウィンドウのリサイズイベントを監視して、結果表示エリアの可視性を調整
+        window.addEventListener('resize', () => {
+            if (window.innerWidth >= 768) {
+                // デスクトップビューの場合、結果が表示状態ならmd:blockを適用
+                if (!resultsDiv.classList.contains('hidden')) {
+                    resultsDiv.classList.add('md:block');
+                }
+            } else {
+                // モバイルビューの場合、md:blockを削除（非表示状態に）
+                resultsDiv.classList.remove('md:block');
+            }
+        });
     </script>
 </body>
 </html>
