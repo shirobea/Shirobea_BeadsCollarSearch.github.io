@@ -220,7 +220,7 @@
 
     <!-- バージョン表示 -->
     <div class="fixed bottom-2 right-2 text-gray-400 text-xs z-50">
-        Version 2.1.1
+        Version 2.1.2
     </div>
 
     <script>
@@ -600,7 +600,8 @@
         let previousClosestColor = null;
 
         // 現在選択されているフィルタカテゴリ
-        let currentFilterCategory = 'both'; // 初期値は「両方」
+        // 初期値は「両方」ですが、リセットボタンでは変更しないようにします
+        let currentFilterCategory = 'both'; 
 
         /**
          * 2つのRGB値間のユークリッド距離を計算します。
@@ -781,7 +782,7 @@
          * 入力欄をクリアし、結果とエラーメッセージを非表示にします。
          * ラジオボタンの選択状態は変更しません。
          */
-        function clearResultsAndErrorMessages() {
+        function clearInputsAndResults() {
             document.querySelectorAll('.input-group input').forEach(input => input.value = '');
             resultsDiv.classList.add('hidden');
             resultsDiv.classList.remove('md:block'); 
@@ -794,12 +795,12 @@
         }
 
         /**
-         * 全ての入力欄と表示をリセットし、ラジオボタンの選択も「両方」に戻します。
+         * アプリの初期状態にリセットします。
+         * 入力欄と結果表示をクリアし、ラジオボタンは現在の選択を維持します。
          */
-        function resetAll() {
-            clearResultsAndErrorMessages();
-            document.querySelector('input[name="colorFilter"][value="both"]').checked = true;
-            currentFilterCategory = 'both';
+        function resetApp() {
+            clearInputsAndResults();
+            // ラジオボタンの選択状態は変更しない
         }
 
 
@@ -959,17 +960,17 @@
                     findColorBtn.click();
                 } else {
                     // 入力が不完全な場合は、結果表示エリアとエラーメッセージを非表示にするだけ
-                    clearResultsAndErrorMessages();
+                    clearInputsAndResults();
                 }
             });
         });
 
 
         // "リセット" ボタンのイベントリスナー
-        resetBtn.addEventListener('click', resetAll); // 全てリセットする関数を呼び出す
+        resetBtn.addEventListener('click', resetApp); // 全てリセットする関数を呼び出す
 
         // 初期表示をリセット
-        resetAll(); // アプリ起動時も全てリセット
+        resetApp(); // アプリ起動時も全てリセット
         // ウィンドウのリサイズイベントを監視して、結果表示エリアの可視性を調整
         window.addEventListener('resize', () => {
             if (window.innerWidth >= 768) {
