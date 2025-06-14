@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RGB値から最も近い色を見つける</title>
+    <title>ビーズカラー検索</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -82,13 +82,19 @@
         }
     </style>
 </head>
-<body class="flex items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
+<body class="flex items-center justify-center min-h-screen p-4 sm:p-6 md:p-8 relative">
+    <!-- バージョン表示 -->
+    <div class="fixed top-2 right-2 text-gray-400 text-xs z-50">
+        Version 2.1.6
+    </div>
+
     <!-- メインのアプリコンテナ: 画面幅に応じて縦並び/横並びを切り替える -->
     <div id="app-container" class="flex flex-col md:flex-row justify-center items-center w-full max-w-screen-xl mx-auto">
         <!-- 左カラム: 入力フォームとボタン -->
         <div class="bg-white p-8 sm:p-10 md:p-12 rounded-2xl shadow-xl w-full max-w-md md:mr-8 mb-8 md:mb-0 flex-shrink-0">
+            <!-- タイトルデザインをよりシンプルに修正 -->
             <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 mb-8 tracking-tight">
-                <span class="inline-block px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-700 text-white rounded-xl shadow-lg mr-2">色</span>を<span class="text-purple-700">見つける</span>
+                <span class="text-blue-600">ビーズカラー</span><span class="text-purple-700">検索</span>
             </h1>
             <p class="text-gray-600 text-base text-center mb-8">
                 赤(R), 緑(G), 青(B)の値を入力して、登録されている色の中から最も近い色を見つけます。
@@ -187,22 +193,23 @@
                 <div id="colorPreview" class="w-32 h-32 mx-auto rounded-full mt-6 border-4 border-indigo-300 shadow-lg"></div>
             </div>
 
-            <div id="otherClosestColors" class="mt-8 pt-6 border-t border-indigo-200 flex flex-wrap justify-around items-stretch">
-                <div id="secondClosest" class="w-1/2 sm:w-1/3 p-2 flex flex-col items-center hidden justify-between">
+            <!-- 2番目と3番目の色見本表示エリアにgap-x-4とflex-row, justify-centerを追加 -->
+            <div id="otherClosestColors" class="mt-8 pt-6 border-t border-indigo-200 flex flex-row justify-center items-stretch gap-x-4">
+                <div id="secondClosest" class="w-1/2 md:w-1/3 min-w-[150px] p-2 flex flex-col items-center hidden justify-between flex-shrink-0">
                     <div>
                         <p class="font-bold text-sm mb-1">2番目に近い色:</p>
                         <p class="text-lg leading-tight mb-0"><span id="secondColorNumber" class="text-xl font-bold"></span></p>
-                        <p class="text-lg leading-tight mt-0 mb-0"><span id="secondColorNameActual" class="text-lg font-semibold" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;"></span></p>
+                        <p class="text-base leading-tight mt-0 mb-0"><span id="secondColorNameActual" class="text-base font-semibold" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;"></span></p>
                         <p class="text-xs leading-tight mb-0"><span id="secondColorRgb"></span></p>
                         <p class="text-xs leading-tight mt-0"><span id="secondSimilarity"></span></p>
                     </div>
                     <div id="secondColorPreview" class="w-20 h-20 rounded-full mt-2 border-2 border-indigo-300 shadow-md flex-shrink-0"></div>
                 </div>
-                <div id="thirdClosest" class="w-1/2 sm:w-1/3 p-2 flex flex-col items-center hidden justify-between">
+                <div id="thirdClosest" class="w-1/2 md:w-1/3 min-w-[150px] p-2 flex flex-col items-center hidden justify-between flex-shrink-0">
                     <div>
                         <p class="font-bold text-sm mb-1">3番目に近い色:</p>
                         <p class="text-lg leading-tight mb-0"><span id="thirdColorNumber" class="text-xl font-bold"></span></p>
-                        <p class="text-lg leading-tight mt-0 mb-0"><span id="thirdColorNameActual" class="text-lg font-semibold" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;"></span></p>
+                        <p class="text-base leading-tight mt-0 mb-0"><span id="thirdColorNameActual" class="text-base font-semibold" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;"></span></p>
                         <p class="text-xs leading-tight mb-0"><span id="thirdColorRgb"></span></p>
                         <p class="text-xs leading-tight mt-0"><span id="thirdSimilarity"></span></p>
                     </div>
@@ -216,11 +223,6 @@
             <strong class="font-bold">エラー！</strong>
             <span class="block sm:inline" id="errorText"></span>
         </div>
-    </div>
-
-    <!-- バージョン表示 -->
-    <div class="fixed bottom-2 right-2 text-gray-400 text-xs z-50">
-        Version 2.1.2
     </div>
 
     <script>
@@ -600,8 +602,7 @@
         let previousClosestColor = null;
 
         // 現在選択されているフィルタカテゴリ
-        // 初期値は「両方」ですが、リセットボタンでは変更しないようにします
-        let currentFilterCategory = 'both'; 
+        let currentFilterCategory = 'both'; // 初期値は「両方」
 
         /**
          * 2つのRGB値間のユークリッド距離を計算します。
