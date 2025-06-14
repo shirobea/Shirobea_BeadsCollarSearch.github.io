@@ -83,16 +83,15 @@
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-4 sm:p-6 md:p-8 relative">
-    <!-- バージョン表示 -->
-    <div class="fixed top-2 right-2 text-gray-400 text-xs z-50">
-        Version 2.1.6
-    </div>
-
     <!-- メインのアプリコンテナ: 画面幅に応じて縦並び/横並びを切り替える -->
     <div id="app-container" class="flex flex-col md:flex-row justify-center items-center w-full max-w-screen-xl mx-auto">
         <!-- 左カラム: 入力フォームとボタン -->
-        <div class="bg-white p-8 sm:p-10 md:p-12 rounded-2xl shadow-xl w-full max-w-md md:mr-8 mb-8 md:mb-0 flex-shrink-0">
-            <!-- タイトルデザインをよりシンプルに修正 -->
+        <div class="bg-white p-8 sm:p-10 md:p-12 rounded-2xl shadow-xl w-full max-w-md md:mr-8 mb-8 md:mb-0 flex-shrink-0 relative">
+            <!-- バージョン表示: 親要素に対して絶対位置で配置 -->
+            <div class="absolute top-2 right-2 text-gray-400 text-xs z-50">
+                Version 2.1.9
+            </div>
+            <!-- タイトルデザイン -->
             <h1 class="text-3xl sm:text-4xl font-extrabold text-center text-gray-800 mb-8 tracking-tight">
                 <span class="text-blue-600">ビーズカラー</span><span class="text-purple-700">検索</span>
             </h1>
@@ -195,6 +194,7 @@
 
             <!-- 2番目と3番目の色見本表示エリアにgap-x-4とflex-row, justify-centerを追加 -->
             <div id="otherClosestColors" class="mt-8 pt-6 border-t border-indigo-200 flex flex-row justify-center items-stretch gap-x-4">
+                <!-- 2番目に近い色 -->
                 <div id="secondClosest" class="w-1/2 md:w-1/3 min-w-[150px] p-2 flex flex-col items-center hidden justify-between flex-shrink-0">
                     <div>
                         <p class="font-bold text-sm mb-1">2番目に近い色:</p>
@@ -205,6 +205,7 @@
                     </div>
                     <div id="secondColorPreview" class="w-20 h-20 rounded-full mt-2 border-2 border-indigo-300 shadow-md flex-shrink-0"></div>
                 </div>
+                <!-- 3番目に近い色 -->
                 <div id="thirdClosest" class="w-1/2 md:w-1/3 min-w-[150px] p-2 flex flex-col items-center hidden justify-between flex-shrink-0">
                     <div>
                         <p class="font-bold text-sm mb-1">3番目に近い色:</p>
@@ -671,6 +672,30 @@
         }
 
         /**
+         * 補助的な色見本（2番目、3番目）の表示を更新するヘルパー関数。
+         * @param {HTMLElement} containerDiv - 2番目または3番目の色見本全体のコンテナ要素。
+         * @param {HTMLElement} numberSpan - 色番号を表示する要素。
+         * @param {HTMLElement} nameActualSpan - 実際の色名を表示する要素。
+         * @param {HTMLElement} rgbSpan - RGB値を表示する要素。
+         * @param {HTMLElement} similaritySpan - 近似率を表示する要素。
+         * @param {HTMLElement} previewDiv - 色のプレビューを表示する要素。
+         * @param {Object} colorData - 表示する色データ。
+         */
+        function updateClosestColorDisplay(containerDiv, numberSpan, nameActualSpan, rgbSpan, similaritySpan, previewDiv, colorData) {
+            if (colorData) {
+                containerDiv.classList.remove('hidden');
+                const [colorNumber, actualColorName] = colorData.name.split('_');
+                numberSpan.textContent = colorNumber;
+                nameActualSpan.textContent = actualColorName;
+                rgbSpan.textContent = `(${colorData.rgb[0]}, ${colorData.rgb[1]}, ${colorData.rgb[2]})`;
+                similaritySpan.textContent = calculateSimilarityPercentage(colorData.distance);
+                previewDiv.style.backgroundColor = `rgb(${colorData.rgb[0]}, ${colorData.rgb[1]}, ${colorData.rgb[2]})`;
+            } else {
+                containerDiv.classList.add('hidden');
+            }
+        }
+
+        /**
          * 結果を表示します。1番目、2番目、3番目に近い色を表示します。
          * @param {Array} sortedColors - 距離でソートされた色オブジェクトのリスト。
          */
@@ -694,20 +719,13 @@
                 });
             }
 
-            // すべての補助表示を初期状態（非表示）に戻す
-            secondClosestDiv.classList.add('hidden');
-            thirdClosestDiv.classList.add('hidden');
-
             // 1番目に近い色を表示
             if (sortedColors.length > 0) {
                 const closest = sortedColors[0];
-                // 色番号と色名を分離
                 const [colorNumber, actualColorName] = closest.name.split('_');
 
-                // メインの結果表示要素にセット
                 mainColorNumberSpan.textContent = colorNumber;
                 mainColorNameActualSpan.textContent = actualColorName;
-                
                 colorRgbSpan.textContent = `(${closest.rgb[0]}, ${closest.rgb[1]}, ${closest.rgb[2]})`;
                 colorPreviewDiv.style.backgroundColor = `rgb(${closest.rgb[0]}, ${closest.rgb[1]}, ${closest.rgb[2]})`;
                 similarityPercentageSpan.textContent = calculateSimilarityPercentage(closest.distance);
@@ -718,14 +736,12 @@
                     const prevDistance = previousClosestColor.distance;
 
                     let message = '';
-                    // 距離が完全に同じ場合は特定のメッセージを表示
                     if (currentDistance === prevDistance) {
                         message = '前回と同じくらい近い色です。';
                     } else {
                         const diff = Math.abs(currentDistance - prevDistance);
                         const diffPercentage = (diff / MAX_RGB_DISTANCE * 100).toFixed(2); 
 
-                        // 差分パーセンテージが0.00%に丸められるが、実際には距離が異なる場合
                         if (diffPercentage === '0.00' && diff > 0) {
                             if (currentDistance < prevDistance) {
                                 message = '前回より<span class="font-bold text-green-700">わずかに</span>近くなりました！';
@@ -733,7 +749,6 @@
                                 message = '前回より<span class="font-bold text-red-700">わずかに</span>遠くなりました。';
                             }
                         } else {
-                            // 0.00%以外の明確な差がある場合
                             if (currentDistance < prevDistance) {
                                 message = `前回より <span class="font-bold text-green-700">${diffPercentage}%</span> 近くなりました！`;
                             } else {
@@ -750,33 +765,13 @@
                 previousClosestColor = { ...closest }; 
             } else {
                 displayError("最も近い色が見つかりませんでした。");
-                previousClosestColor = null; // 結果がない場合は以前の情報をリセット
+                previousClosestColor = null; 
                 return;
             }
 
-            // 2番目と3番目に近い色を表示 (存在する場合)
-            if (sortedColors.length > 1) {
-                const second = sortedColors[1];
-                const [secondColorNumber, secondActualColorName] = second.name.split('_');
-                secondClosestDiv.classList.remove('hidden');
-                
-                secondColorNumberSpan.textContent = secondColorNumber;
-                secondColorNameActualSpan.textContent = secondActualColorName;
-                secondColorRgbSpan.textContent = `(${second.rgb[0]}, ${second.rgb[1]}, ${second.rgb[2]})`;
-                secondSimilaritySpan.textContent = calculateSimilarityPercentage(second.distance);
-                secondColorPreviewDiv.style.backgroundColor = `rgb(${second.rgb[0]}, ${second.rgb[1]}, ${second.rgb[2]})`;
-            }
-            if (sortedColors.length > 2) {
-                const third = sortedColors[2];
-                const [thirdColorNumber, thirdActualColorName] = third.name.split('_');
-                thirdClosestDiv.classList.remove('hidden');
-
-                thirdColorNumberSpan.textContent = thirdColorNumber;
-                thirdColorNameActualSpan.textContent = thirdActualColorName;
-                thirdColorRgbSpan.textContent = `(${third.rgb[0]}, ${third.rgb[1]}, ${third.rgb[2]})`;
-                thirdSimilaritySpan.textContent = calculateSimilarityPercentage(third.distance);
-                thirdColorPreviewDiv.style.backgroundColor = `rgb(${third.rgb[0]}, ${third.rgb[1]}, ${third.rgb[2]})`;
-            }
+            // 2番目と3番目に近い色を表示 (ヘルパー関数を使用)
+            updateClosestColorDisplay(secondClosestDiv, secondColorNumberSpan, secondColorNameActualSpan, secondColorRgbSpan, secondSimilaritySpan, secondColorPreviewDiv, sortedColors[1]);
+            updateClosestColorDisplay(thirdClosestDiv, thirdColorNumberSpan, thirdColorNameActualSpan, thirdColorRgbSpan, thirdSimilaritySpan, thirdColorPreviewDiv, sortedColors[2]);
         }
 
         /**
